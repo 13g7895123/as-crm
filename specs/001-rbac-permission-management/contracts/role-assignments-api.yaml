@@ -1,0 +1,486 @@
+openapi: 3.0.3
+info:
+  title: Role Assignments API
+  description: RBAC 角色指派 API - 支援為使用者指派角色、管理時間性授權、延長/撤銷權限
+  version: 1.0.0
+  contact:
+    name: CRM Development Team
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+tags:
+  - name: Role Assignments
+    description: 角色指派操作
+  - name: Team Management
+    description: 團隊成員權限管理
+
+paths:
+  /role-assignments:
+    post:
+      summary: 為使用者指派角色
+      description: 為指定使用者指派角色,支援時間性授權 (US2)
+      tags:
+        - Role Assignments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleAssignmentCreateRequest'
+      responses:
+        '201':
+          description: 成功指派角色
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RoleAssignment'
+                  message:
+                    type: string
+                    example: 角色指派成功
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /role-assignments/{id}:
+    delete:
+      summary: 撤銷角色指派
+      description: 撤銷使用者的角色指派
+      tags:
+        - Role Assignments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 角色指派 ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功撤銷角色
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 角色指派已撤銷
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /role-assignments/{id}/extend:
+    put:
+      summary: 延長或縮短角色有效期限
+      description: 調整角色指派的有效期限 (FR-013)
+      tags:
+        - Role Assignments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 角色指派 ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_valid_until:
+                  type: string
+                  format: date-time
+                  description: 新的有效期限
+                  example: "2025-12-31T23:59:59Z"
+              required:
+                - new_valid_until
+      responses:
+        '200':
+          description: 成功調整有效期限
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RoleAssignment'
+                  message:
+                    type: string
+                    example: 角色有效期限已更新
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}/roles:
+    get:
+      summary: 取得使用者的角色清單
+      description: 取得指定使用者的所有角色指派 (包含時間性授權資訊)
+      tags:
+        - Role Assignments
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: 使用者 ID
+          schema:
+            type: integer
+        - name: include_expired
+          in: query
+          description: 是否包含已過期的角色
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 成功取得使用者角色
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleAssignmentDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /teams/members:
+    get:
+      summary: 取得團隊成員清單
+      description: 取得當前使用者管理的團隊成員及其角色 (US2 - 業務主管管理團隊)
+      tags:
+        - Team Management
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          description: 搜尋成員姓名或 email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功取得團隊成員清單
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeamMember'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /role-assignments/expiring:
+    get:
+      summary: 取得即將過期的角色指派
+      description: 取得即將過期的角色清單 (用於通知 - FR-012)
+      tags:
+        - Role Assignments
+      parameters:
+        - name: days
+          in: query
+          description: 幾天內即將過期
+          schema:
+            type: integer
+            default: 7
+            enum: [1, 3, 7]
+      responses:
+        '200':
+          description: 成功取得即將過期的角色
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExpiringRoleAssignment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  schemas:
+    RoleAssignmentCreateRequest:
+      type: object
+      required:
+        - user_id
+        - role_id
+      properties:
+        user_id:
+          type: integer
+          description: 使用者 ID
+          example: 42
+        role_id:
+          type: integer
+          description: 角色 ID
+          example: 5
+        valid_from:
+          type: string
+          format: date-time
+          nullable: true
+          description: 有效開始日期 (null 表示立即生效)
+          example: "2025-10-21T00:00:00Z"
+        valid_until:
+          type: string
+          format: date-time
+          nullable: true
+          description: 有效結束日期 (null 表示永久有效)
+          example: "2025-12-31T23:59:59Z"
+
+    RoleAssignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        user_id:
+          type: integer
+          example: 42
+        role_id:
+          type: integer
+          example: 5
+        role_name:
+          type: string
+          example: 業務人員
+        valid_from:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date-time
+          nullable: true
+        is_active:
+          type: boolean
+          description: 是否在有效期內
+          example: true
+        assigned_by:
+          type: integer
+          description: 指派者使用者 ID
+        assigned_at:
+          type: string
+          format: date-time
+
+    RoleAssignmentDetail:
+      allOf:
+        - $ref: '#/components/schemas/RoleAssignment'
+        - type: object
+          properties:
+            role:
+              type: object
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+                description:
+                  type: string
+                  nullable: true
+                permission_count:
+                  type: integer
+                  description: 角色包含的權限數量
+            days_until_expiry:
+              type: integer
+              nullable: true
+              description: 距離過期天數 (null 表示永久有效或已過期)
+            assigned_by_user:
+              type: object
+              nullable: true
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+
+    TeamMember:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        user_name:
+          type: string
+        email:
+          type: string
+        department:
+          type: string
+          nullable: true
+        current_roles:
+          type: array
+          description: 當前生效中的角色
+          items:
+            type: object
+            properties:
+              role_id:
+                type: integer
+              role_name:
+                type: string
+              valid_until:
+                type: string
+                format: date-time
+                nullable: true
+
+    ExpiringRoleAssignment:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        user_name:
+          type: string
+        role_id:
+          type: integer
+        role_name:
+          type: string
+        valid_until:
+          type: string
+          format: date-time
+        days_until_expiry:
+          type: integer
+          description: 距離過期天數
+        notification_sent:
+          type: boolean
+          description: 是否已發送通知
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    Unauthorized:
+      description: 未授權 - 缺少或無效的 JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Unauthorized
+            message: 請先登入系統
+
+    Forbidden:
+      description: 禁止存取 - 使用者無此權限
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Forbidden
+            message: 您沒有管理此使用者角色的權限
+
+    NotFound:
+      description: 資源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not Found
+            message: 找不到指定的角色指派
+
+    BadRequest:
+      description: 錯誤的請求
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalid_date_range:
+              value:
+                error: Bad Request
+                message: 有效開始日期不可晚於結束日期
+            role_already_assigned:
+              value:
+                error: Bad Request
+                message: 使用者已擁有此角色
+
+    ValidationError:
+      description: 驗證錯誤
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Validation Error
+              message:
+                type: string
+                example: 輸入資料驗證失敗
+              details:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+                example:
+                  user_id: ["使用者 ID 不可為空"]
+                  role_id: ["角色 ID 不可為空"]
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

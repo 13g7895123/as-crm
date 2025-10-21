@@ -1,0 +1,61 @@
+# ============================================
+# Docker Ignore - Frontend
+# ============================================
+# 排除不需要複製到 Docker 映像的檔案
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 環境變數
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Nuxt
+.nuxt/
+.output/
+dist/
+.cache/
+
+# 測試
+tests/
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+vitest.config.ts
+playwright.config.ts
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# 文件
+README.md
+CHANGELOG.md
+LICENSE
+
+# 日誌
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 其他
+*.md
+!package.json

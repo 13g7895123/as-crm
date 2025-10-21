@@ -1,0 +1,103 @@
+<?php
+
+namespace App\Filters;
+
+use CodeIgniter\Filters\FilterInterface;
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use Config\Services;
+
+/**
+ * AuthFilter
+ *
+ * JWT 身份驗證 Filter
+ * 在請求進入 Controller 前驗證 JWT token 的有效性
+ */
+class AuthFilter implements FilterInterface
+{
+    /**
+     * 在請求處理前執行
+     *
+     * @param RequestInterface $request
+     * @param array|null       $arguments
+     *
+     * @return mixed
+     */
+    public function before(RequestInterface $request, $arguments = null)
+    {
+        // 取得 JWT library
+        $jwt = Services::jwt();
+
+        // 從 Authorization header 取得 token
+        $authHeader = $request->getHeaderLine('Authorization');
+
+        if (empty($authHeader)) {
+            return $this->unauthorizedResponse('缺少身份驗證 token');
+        }
+
+        // 驗證 Authorization header 格式: Bearer <token>
+        if (!preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+            return $this->unauthorizedResponse('無效的 Authorization header 格式');
+        }
+
+        $token = $matches[1];
+
+        // 驗證 JWT token
+        try {
+            $payload = $jwt->decode($token);
+
+            if (!$payload) {
+                return $this->unauthorizedResponse('無效的 token');
+            }
+
+            // 驗證 token 是否過期
+            if (isset($payload->exp) && $payload->exp < time()) {
+                return $this->unauthorizedResponse('Token 已過期');
+            }
+
+            // 將使用者資訊存入 request,供後續 controller 使用
+            $request->user_id = $payload->user_id ?? null;
+            $request->username = $payload->username ?? null;
+            $request->email = $payload->email ?? null;
+
+            // 驗證通過,繼續處理請求
+            return $request;
+
+        } catch (\Exception $e) {
+            log_message('error', 'JWT 驗證失敗: ' . $e->getMessage());
+            return $this->unauthorizedResponse('Token 驗證失敗: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 在回應返回後執行
+     *
+     * @param RequestInterface  $request
+     * @param ResponseInterface $response
+     * @param array|null        $arguments
+     *
+     * @return void
+     */
+    public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
+    {
+        // 不需要在回應後處理
+    }
+
+    /**
+     * 回傳未授權錯誤回應
+     *
+     * @param string $message
+     *
+     * @return ResponseInterface
+     */
+    private function unauthorizedResponse(string $message): ResponseInterface
+    {
+        $response = Services::response();
+
+        return $response->setJSON([
+            'status'  => 'error',
+            'message' => $message,
+            'code'    => 401,
+        ])->setStatusCode(401);
+    }
+}

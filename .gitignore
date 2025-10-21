@@ -10,14 +10,24 @@
 
 # Backend (CodeIgniter 4)
 backend/writable/cache/*
+!backend/writable/cache/index.html
 backend/writable/logs/*
+!backend/writable/logs/index.html
 backend/writable/session/*
+!backend/writable/session/index.html
 backend/writable/uploads/*
+!backend/writable/uploads/index.html
 backend/writable/debugbar/*
 backend/vendor/
+backend/composer.lock
 backend/.env
 backend/phpunit.xml
 backend/.phpunit.result.cache
+backend/build/
+backend/tests/_output/
+backend/phpstan.neon
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
 
 # Frontend (Nuxt 3)
 frontend/node_modules/
@@ -27,12 +37,25 @@ frontend/dist/
 frontend/.cache/
 frontend/.env
 frontend/.env.local
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/pnpm-lock.yaml
+frontend/coverage/
+frontend/.nyc_output/
+frontend/test-results/
+frontend/playwright-report/
+frontend/playwright/.cache/
 
 # Docker
+docker/mariadb/data/
 docker/mariadb/*.sql
+!docker/mariadb/init.sql
+!docker/mariadb/prod-init.sql
+docker/nginx/logs/
 docker/nginx/ssl/*.pem
 docker/nginx/ssl/*.key
 docker/nginx/ssl/*.crt
+docker-compose.override.yml
 
 # IDE
 .vscode/

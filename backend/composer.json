@@ -1,0 +1,54 @@
+{
+    "name": "crm/rbac-backend",
+    "type": "project",
+    "description": "CRM RBAC 權限管理系統後端 - CodeIgniter 4",
+    "keywords": ["crm", "rbac", "codeigniter4", "rest-api"],
+    "homepage": "https://github.com/your-org/crm-rbac",
+    "license": "MIT",
+    "require": {
+        "php": "^8.1",
+        "codeigniter4/framework": "^4.4",
+        "codeigniter4/shield": "^1.0",
+        "firebase/php-jwt": "^6.10"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "^1.10",
+        "fakerphp/faker": "^1.23",
+        "mikey179/vfsstream": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Config\\": "app/Config/"
+        },
+        "exclude-from-classmap": [
+            "**/Database/Migrations/**"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Support\\": "tests/_support"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite unit",
+        "test:integration": "phpunit --testsuite integration",
+        "test:contract": "phpunit --testsuite contract",
+        "analyse": "phpstan analyse app",
+        "post-update-cmd": [
+            "@php spark cache:clear"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

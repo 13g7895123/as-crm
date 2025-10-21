@@ -1,0 +1,27 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * CodeIgniter Spark CLI Tool
+ *
+ * CRM RBAC 權限管理系統 CLI 工具
+ */
+
+// 路徑設定
+define('FCPATH', __DIR__ . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR);
+
+// 載入 Composer autoloader
+require __DIR__ . '/vendor/autoload.php';
+
+// 載入 CodeIgniter 核心
+require_once __DIR__ . '/app/Config/Paths.php';
+$paths = new Config\Paths();
+
+// 啟動框架
+require __DIR__ . '/vendor/codeigniter4/framework/system/bootstrap.php';
+
+// 執行 CLI
+$app = Config\Services::codeigniter();
+$app->initialize();
+$app->setContext('php-cli');
+$app->run();

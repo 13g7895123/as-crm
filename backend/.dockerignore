@@ -1,0 +1,49 @@
+# ============================================
+# Docker Ignore - Backend
+# ============================================
+# 排除不需要複製到 Docker 映像的檔案
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 環境變數
+.env
+.env.*
+!.env.example
+
+# Composer
+vendor/
+composer.lock
+
+# 測試和開發工具
+tests/
+phpunit.xml
+phpstan.neon
+.phpunit.result.cache
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# 文件
+README.md
+CHANGELOG.md
+LICENSE
+
+# 暫存和快取
+writable/cache/*
+writable/logs/*
+writable/session/*
+writable/uploads/*
+writable/debugbar/*
+
+# 其他
+*.md
+!composer.json
