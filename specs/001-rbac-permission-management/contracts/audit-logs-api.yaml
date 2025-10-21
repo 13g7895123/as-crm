@@ -1,0 +1,182 @@
+openapi: 3.0.3
+info:
+  title: RBAC 審計記錄 API
+  description: CRM 系統的角色基礎存取控制（RBAC）- 審計記錄查詢 API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: 開發環境
+
+tags:
+  - name: audit-logs
+    description: 審計記錄查詢操作
+
+paths:
+  /audit-logs:
+    get:
+      tags:
+        - audit-logs
+      summary: 查詢審計記錄
+      description: 查詢操作審計記錄，支援多條件篩選
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+          description: 篩選特定使用者的操作
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [view, create, update, delete, export, assign, permission_check_failed]
+          description: 操作類型
+        - name: target_type
+          in: query
+          schema:
+            type: string
+          description: 目標資料類型（customer, order, role, user_permission）
+        - name: result
+          in: query
+          schema:
+            type: string
+            enum: [success, failed, denied]
+          description: 操作結果
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+          description: 開始日期（YYYY-MM-DD）
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+          description: 結束日期（YYYY-MM-DD）
+      responses:
+        '200':
+          description: 成功取得審計記錄
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+  /audit-logs/export:
+    post:
+      tags:
+        - audit-logs
+      summary: 匯出審計記錄
+      description: 匯出符合篩選條件的審計記錄為 CSV 或 Excel
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum: [csv, excel]
+                  default: csv
+                filters:
+                  type: object
+                  description: 與 GET /audit-logs 相同的篩選參數
+      responses:
+        '200':
+          description: 匯出成功，返回檔案下載連結
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_url:
+                    type: string
+                    example: "/api/v1/downloads/audit-logs-20251021.csv"
+                  expires_at:
+                    type: string
+                    format: date-time
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            username:
+              type: string
+            email:
+              type: string
+        action:
+          type: string
+          enum: [view, create, update, delete, export, assign, permission_check_failed]
+        target_type:
+          type: string
+        target_id:
+          type: integer
+          nullable: true
+        old_values:
+          type: object
+          nullable: true
+        new_values:
+          type: object
+          nullable: true
+        result:
+          type: string
+          enum: [success, failed, denied]
+        ip_address:
+          type: string
+        request_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer

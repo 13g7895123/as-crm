@@ -1,0 +1,69 @@
+# Environment files
+.env
+.env.local
+.env.prod
+.env.production
+.env.*.local
+
+# Keep .env.example for reference
+!.env.example
+
+# Backend (CodeIgniter 4)
+backend/writable/cache/*
+backend/writable/logs/*
+backend/writable/session/*
+backend/writable/uploads/*
+backend/writable/debugbar/*
+backend/vendor/
+backend/.env
+backend/phpunit.xml
+backend/.phpunit.result.cache
+
+# Frontend (Nuxt 3)
+frontend/node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/dist/
+frontend/.cache/
+frontend/.env
+frontend/.env.local
+
+# Docker
+docker/mariadb/*.sql
+docker/nginx/ssl/*.pem
+docker/nginx/ssl/*.key
+docker/nginx/ssl/*.crt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database backups
+*.sql
+backup-*.sql
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Coverage reports
+coverage/
+*.coverage
+
+# Build artifacts
+*.tar.gz
+*.zip

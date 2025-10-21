@@ -1,0 +1,727 @@
+openapi: 3.0.3
+info:
+  title: RBAC 角色管理 API
+  description: CRM 系統的角色基礎存取控制（RBAC）- 角色管理 API
+  version: 1.0.0
+  contact:
+    name: CRM Development Team
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: 開發環境
+  - url: https://api.crm.example.com/api/v1
+    description: 生產環境
+
+tags:
+  - name: roles
+    description: 角色管理操作
+  - name: role-assignments
+    description: 角色指派操作
+
+paths:
+  /roles:
+    get:
+      tags:
+        - roles
+      summary: 取得角色清單
+      description: 取得所有角色（含分頁、篩選、排序）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: 頁碼
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+          description: 每頁筆數
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+          description: 篩選啟用/停用角色
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: 搜尋角色名稱或顯示名稱
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [name, created_at, updated_at]
+            default: created_at
+          description: 排序欄位
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: 排序方向
+      responses:
+        '200':
+          description: 成功取得角色清單
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Role'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - roles
+      summary: 建立新角色
+      description: 建立一個新的自訂角色
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleRequest'
+      responses:
+        '201':
+          description: 角色建立成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+                  message:
+                    type: string
+                    example: "角色建立成功"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /roles/{id}:
+    get:
+      tags:
+        - roles
+      summary: 取得角色詳情
+      description: 取得特定角色的詳細資訊（含權限和條件限制）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 角色 ID
+      responses:
+        '200':
+          description: 成功取得角色詳情
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RoleDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - roles
+      summary: 更新角色
+      description: 更新角色資訊、權限、或條件限制
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoleRequest'
+      responses:
+        '200':
+          description: 角色更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Role'
+                  message:
+                    type: string
+                    example: "角色更新成功"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags:
+        - roles
+      summary: 刪除角色
+      description: 刪除自訂角色（系統角色不可刪除）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 角色刪除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "角色刪除成功"
+        '400':
+          description: 無法刪除系統角色或有使用者正在使用的角色
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /roles/{id}/permissions:
+    get:
+      tags:
+        - roles
+      summary: 取得角色的所有權限
+      description: 取得角色直接擁有的權限和透過繼承獲得的權限
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: include_inherited
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: 是否包含繼承的權限
+      responses:
+        '200':
+          description: 成功取得權限清單
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      direct_permissions:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Permission'
+                      inherited_permissions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            permission:
+                              $ref: '#/components/schemas/Permission'
+                            inherited_from:
+                              type: string
+                              description: 繼承自哪個角色
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /role-assignments:
+    post:
+      tags:
+        - role-assignments
+      summary: 指派角色給使用者
+      description: 為使用者指派一個或多個角色，可設定有效期限
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRoleRequest'
+      responses:
+        '201':
+          description: 角色指派成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleAssignment'
+                  message:
+                    type: string
+                    example: "角色指派成功"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /role-assignments/{id}:
+    delete:
+      tags:
+        - role-assignments
+      summary: 撤銷角色指派
+      description: 撤銷使用者的角色
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 角色指派 ID
+      responses:
+        '200':
+          description: 角色撤銷成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "角色撤銷成功"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}/roles:
+    get:
+      tags:
+        - role-assignments
+      summary: 取得使用者的所有角色
+      description: 取得特定使用者當前有效的所有角色
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功取得使用者角色
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleAssignment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "sales_manager"
+        display_name:
+          type: string
+          example: "業務主管"
+        description:
+          type: string
+          example: "管理業務團隊和客戶"
+          nullable: true
+        is_active:
+          type: boolean
+          example: true
+        is_system:
+          type: boolean
+          example: false
+          description: 是否為系統預設角色（不可刪除）
+        parent_role_id:
+          type: integer
+          nullable: true
+          example: 2
+          description: 父角色 ID（用於繼承）
+        created_by:
+          type: integer
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-10-21T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-10-21T14:20:00Z"
+          nullable: true
+
+    RoleDetail:
+      allOf:
+        - $ref: '#/components/schemas/Role'
+        - type: object
+          properties:
+            permissions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Permission'
+            condition_rules:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConditionRule'
+
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        module:
+          type: string
+          example: "customer"
+        action:
+          type: string
+          enum: [view, edit, export, assign]
+          example: "edit"
+        display_name:
+          type: string
+          example: "編輯客戶"
+        description:
+          type: string
+          example: "建立、修改、刪除客戶資料"
+          nullable: true
+
+    ConditionRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        role_id:
+          type: integer
+          example: 5
+        permission_id:
+          type: integer
+          nullable: true
+          example: 10
+          description: NULL 表示適用於角色所有權限
+        condition_type:
+          type: string
+          enum: [department, region, customer_group, order_status, amount_range]
+          example: "region"
+        operator:
+          type: string
+          enum: [equals, not_equals, in, not_in, greater_than, less_than, between]
+          example: "in"
+        condition_value:
+          type: object
+          example:
+            values: ["華東", "華南"]
+          description: JSON 格式的條件值
+
+    RoleAssignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 123
+        role_id:
+          type: integer
+          example: 5
+        role:
+          $ref: '#/components/schemas/Role'
+        valid_from:
+          type: string
+          format: date-time
+          example: "2025-10-21T00:00:00Z"
+        valid_until:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-12-31T23:59:59Z"
+        assigned_by:
+          type: integer
+          example: 1
+        assigned_at:
+          type: string
+          format: date-time
+          example: "2025-10-21T10:30:00Z"
+
+    CreateRoleRequest:
+      type: object
+      required:
+        - name
+        - display_name
+      properties:
+        name:
+          type: string
+          pattern: '^[a-z0-9_]{3,100}$'
+          example: "regional_sales_manager"
+        display_name:
+          type: string
+          minLength: 2
+          maxLength: 255
+          example: "區域業務主管"
+        description:
+          type: string
+          nullable: true
+          example: "負責特定區域的業務管理"
+        is_active:
+          type: boolean
+          default: true
+        parent_role_id:
+          type: integer
+          nullable: true
+          example: 2
+        permissions:
+          type: array
+          items:
+            type: integer
+          example: [1, 2, 5, 8]
+          description: 權限 ID 陣列
+        condition_rules:
+          type: array
+          items:
+            type: object
+            required:
+              - condition_type
+              - operator
+              - condition_value
+            properties:
+              permission_id:
+                type: integer
+                nullable: true
+              condition_type:
+                type: string
+                enum: [department, region, customer_group, order_status, amount_range]
+              operator:
+                type: string
+                enum: [equals, not_equals, in, not_in, greater_than, less_than, between]
+              condition_value:
+                type: object
+
+    UpdateRoleRequest:
+      type: object
+      properties:
+        display_name:
+          type: string
+          minLength: 2
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        parent_role_id:
+          type: integer
+          nullable: true
+        permissions:
+          type: array
+          items:
+            type: integer
+          description: 權限 ID 陣列（會完全取代現有權限）
+        condition_rules:
+          type: array
+          items:
+            type: object
+          description: 條件限制規則（會完全取代現有規則）
+
+    AssignRoleRequest:
+      type: object
+      required:
+        - user_id
+        - role_id
+      properties:
+        user_id:
+          type: integer
+          example: 123
+        role_id:
+          type: integer
+          example: 5
+        valid_from:
+          type: string
+          format: date-time
+          example: "2025-10-21T00:00:00Z"
+          description: 預設為當前時間
+        valid_until:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-12-31T23:59:59Z"
+          description: NULL 表示永久有效
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 156
+        total_pages:
+          type: integer
+          example: 8
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "無效的請求"
+        message:
+          type: string
+          example: "角色名稱已存在"
+        code:
+          type: string
+          example: "ROLE_NAME_DUPLICATE"
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "驗證失敗"
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            name: ["角色名稱格式不正確"]
+            display_name: ["顯示名稱為必填"]
+
+  responses:
+    Unauthorized:
+      description: 未授權 - 需要有效的 JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "未授權"
+            message: "請先登入"
+            code: "UNAUTHORIZED"
+
+    Forbidden:
+      description: 禁止存取 - 無權限執行此操作
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "禁止存取"
+            message: "您沒有編輯角色的權限"
+            code: "PERMISSION_DENIED"
+
+    NotFound:
+      description: 找不到資源
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "找不到資源"
+            message: "角色不存在"
+            code: "ROLE_NOT_FOUND"
+
+    BadRequest:
+      description: 錯誤的請求
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ValidationError:
+      description: 驗證錯誤
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'

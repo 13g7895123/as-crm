@@ -31,7 +31,19 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify compliance with `.specify/memory/constitution.md`:
+
+- [ ] **Code Quality Standards**: Design supports modular architecture, type safety, and clear documentation
+- [ ] **Testing Discipline**: Test strategy defined (unit, integration, contract, e2e for P1 stories); TDD planned for critical paths
+- [ ] **User Experience Consistency**: UX patterns documented; accessibility (WCAG 2.1 AA) requirements identified; responsive design planned
+- [ ] **Performance Requirements**: Performance targets defined (API latency <200ms/500ms, TTI <3s, bundle <200KB); monitoring strategy included
+- [ ] **Documentation Language Standards**: This plan.md written in Traditional Chinese (zh-TW); spec.md in zh-TW; user-facing docs planned in zh-TW
+- [ ] **Frontend/Backend Separation**: Feature scope clearly defined (frontend-only, backend-only, or both with API contract); changes confined to appropriate directory
+- [ ] **Observability and Traceability**: Logging strategy defined (structured logs, correlation IDs); metrics identified; tracing plan included; error tracking and audit logging planned
+- [ ] **Development Workflow**: Feature branch strategy, PR process, incremental delivery (P1→P2→P3) planned
+- [ ] **Quality Gates**: All 8 gates (Code Quality, Testing, Security, UX, Performance, Documentation Language, Architecture, Observability) can be satisfied by implementation
+
+*Document any violations in Complexity Tracking section with justification.*
 
 ## Project Structure
 
@@ -49,50 +61,43 @@ specs/[###-feature]/
 
 ### Source Code (repository root)
 <!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
+  ACTION REQUIRED: This project uses frontend/backend separation (Constitution Principle VI).
+  Specify which directories this feature will modify based on its scope.
 -->
 
 ```
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+# Frontend/Backend Separation (CONSTITUTION REQUIREMENT)
 backend/
 ├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
+│   ├── models/        # Database models and schemas
+│   ├── services/      # Business logic services
+│   ├── api/           # API endpoints and routes
+│   └── lib/           # Backend utilities
 └── tests/
+    ├── contract/      # API contract tests
+    ├── integration/   # Backend integration tests
+    └── unit/          # Backend unit tests
 
 frontend/
 ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
+│   ├── components/    # UI components
+│   ├── pages/         # Page-level components
+│   ├── services/      # API client and frontend services
+│   └── lib/           # Frontend utilities
 └── tests/
+    ├── integration/   # Frontend integration tests
+    └── unit/          # Frontend unit tests
 
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+specs/[###-feature]/
+└── contracts/         # API contracts (interface between frontend and backend)
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Feature Scope**: [Specify one of the following]
+- **Frontend Only**: This feature only modifies code in `frontend/` directory
+- **Backend Only**: This feature only modifies code in `backend/` directory
+- **Frontend + Backend (API Contract Change)**: This feature requires changes to both `frontend/` and `backend/` directories and includes API contract definition in `specs/[###-feature]/contracts/`
+
+**Directories Modified**: [List specific directories this feature will touch, e.g., `frontend/src/components/`, `backend/src/api/`]
 
 ## Complexity Tracking
 
