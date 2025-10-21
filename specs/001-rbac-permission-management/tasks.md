@@ -65,6 +65,10 @@
 - [X] T031 [P] 建立 frontend/composables/useAuth.ts（身份驗證 composable,提供 login/logout/getToken 方法）
 - [X] T032 [P] 建立 backend/app/Libraries/JWT.php（JWT token 生成和驗證 library）
 - [X] T033 建立 backend/app/Controllers/API/AuthController.php（login/logout/refresh token endpoints）
+- [ ] T034 [P] 建立 frontend/layouts/default.vue（主要布局:側邊欄+導覽列+內容區域三區塊結構,符合 FR-033）
+- [ ] T035 [P] 建立 frontend/components/layout/Sidebar.vue（側邊欄元件:淺灰/白色背景,深色文字,權限動態選單,符合 FR-034）
+- [ ] T036 [P] 建立 frontend/components/layout/Navbar.vue（導覽列元件:白色背景,深色文字/圖示,60-64px 高度,符合 FR-035）
+- [ ] T037 [P] 建立 frontend/components/layout/ContentArea.vue（內容區域容器:白色/淺灰背景,卡片式設計,符合 FR-036）
 
 **Checkpoint**: 基礎設施就緒 - 使用者故事實作現在可以平行開始
 
@@ -80,35 +84,35 @@
 
 **NOTE: 先寫這些測試,確保它們在實作前失敗**
 
-- [X] T034 [P] [US1] 建立 backend/tests/contract/RoleContractTest.php（測試 roles API 符合 OpenAPI 規格）
-- [X] T035 [P] [US1] 建立 backend/tests/integration/RoleAPITest.php（測試建立/更新/刪除角色的完整流程）
-- [X] T036 [P] [US1] 建立 backend/tests/unit/RoleServiceTest.php（測試 RoleService 的業務邏輯）
-- [X] T037 [P] [US1] 建立 frontend/tests/unit/useRoles.test.ts（測試 useRoles composable）
-- [X] T038 [P] [US1] 建立 frontend/tests/e2e/role-management.spec.ts（E2E 測試角色管理完整流程）
+- [X] T038 [P] [US1] 建立 backend/tests/contract/RoleContractTest.php（測試 roles API 符合 OpenAPI 規格）
+- [X] T039 [P] [US1] 建立 backend/tests/integration/RoleAPITest.php（測試建立/更新/刪除角色的完整流程）
+- [X] T040 [P] [US1] 建立 backend/tests/unit/RoleServiceTest.php（測試 RoleService 的業務邏輯）
+- [X] T041 [P] [US1] 建立 frontend/tests/unit/useRoles.test.ts（測試 useRoles composable）
+- [X] T042 [P] [US1] 建立 frontend/tests/e2e/role-management.spec.ts（E2E 測試角色管理完整流程）
 
 ### Implementation for User Story 1
 
-- [X] T039 [P] [US1] 建立 backend/app/Models/RoleModel.php（角色資料模型,含驗證規則）
-- [X] T040 [P] [US1] 建立 backend/app/Models/PermissionModel.php（權限資料模型）
-- [X] T041 [P] [US1] 建立 backend/app/Models/RolePermissionModel.php（角色-權限關聯模型）
-- [X] T042 [P] [US1] 建立 backend/app/Models/ConditionRuleModel.php（條件限制規則模型,含 JSON 解析）
-- [X] T043 [US1] 建立 backend/app/Services/RoleService.php（角色 CRUD 業務邏輯,依賴 T039-T042）
-- [X] T044 [US1] 建立 backend/app/Services/PermissionService.php（權限查詢業務邏輯,依賴 T040）
-- [X] T045 [US1] 建立 backend/app/Controllers/API/RoleController.php（Roles API endpoints: GET/POST/PUT/DELETE /roles,依賴 T043-T044）
-- [X] T046 [US1] 建立 backend/app/Controllers/API/PermissionController.php（Permissions API endpoints: GET /permissions,依賴 T044）
-- [X] T047 [US1] 在 RoleService 中實作條件限制驗證邏輯（驗證 condition_type 和 operator 的有效性）
-- [X] T048 [US1] 在 RoleController 中新增錯誤處理和驗證（系統角色不可刪除、name 唯一性檢查）
-- [X] T049 [P] [US1] 建立 frontend/stores/roles.ts（Pinia roles store,管理角色列表狀態）
-- [X] T050 [P] [US1] 建立 frontend/stores/permissions.ts（Pinia permissions store,快取權限資料,TTL 30分鐘）
-- [X] T051 [US1] 建立 frontend/composables/useRoles.ts（角色管理 composable,提供 createRole/updateRole/deleteRole/getRoles 方法,依賴 T049）
-- [X] T052 [US1] 建立 frontend/composables/usePermissions.ts（權限查詢 composable,提供 getPermissions/can/canAny 方法,依賴 T050）
-- [X] T053 [P] [US1] 建立 frontend/components/roles/RoleForm.vue（角色表單元件,含名稱、描述、啟用狀態輸入）
-- [X] T054 [P] [US1] 建立 frontend/components/roles/PermissionSelector.vue（權限選擇器元件,按模組分組顯示權限）
-- [X] T055 [P] [US1] 建立 frontend/components/roles/ConditionBuilder.vue（條件建構器元件,支援部門/區域/客戶分群條件）
-- [X] T056 [US1] 建立 frontend/pages/roles/index.vue（角色清單頁面,含分頁、篩選、排序,依賴 T051, T053-T055）
-- [X] T057 [US1] 建立 frontend/pages/roles/create.vue（建立角色頁面,整合 RoleForm/PermissionSelector/ConditionBuilder,依賴 T051, T053-T055）
-- [X] T058 [US1] 建立 frontend/pages/roles/[id]/edit.vue（編輯角色頁面,依賴 T051, T053-T055）
-- [X] T059 [US1] 執行所有 User Story 1 測試並確保通過（npm run test:unit && npm run test:e2e && vendor/bin/phpunit）
+- [X] T043 [P] [US1] 建立 backend/app/Models/RoleModel.php（角色資料模型,含驗證規則）
+- [X] T044 [P] [US1] 建立 backend/app/Models/PermissionModel.php（權限資料模型）
+- [X] T045 [P] [US1] 建立 backend/app/Models/RolePermissionModel.php（角色-權限關聯模型）
+- [X] T046 [P] [US1] 建立 backend/app/Models/ConditionRuleModel.php（條件限制規則模型,含 JSON 解析）
+- [X] T047 [US1] 建立 backend/app/Services/RoleService.php（角色 CRUD 業務邏輯,依賴 T043-T046）
+- [X] T048 [US1] 建立 backend/app/Services/PermissionService.php（權限查詢業務邏輯,依賴 T044）
+- [X] T049 [US1] 建立 backend/app/Controllers/API/RoleController.php（Roles API endpoints: GET/POST/PUT/DELETE /roles,依賴 T047-T048）
+- [X] T050 [US1] 建立 backend/app/Controllers/API/PermissionController.php（Permissions API endpoints: GET /permissions,依賴 T048）
+- [X] T051 [US1] 在 RoleService 中實作條件限制驗證邏輯（驗證 condition_type 和 operator 的有效性）
+- [X] T052 [US1] 在 RoleController 中新增錯誤處理和驗證（系統角色不可刪除、name 唯一性檢查）
+- [X] T053 [P] [US1] 建立 frontend/stores/roles.ts（Pinia roles store,管理角色列表狀態）
+- [X] T054 [P] [US1] 建立 frontend/stores/permissions.ts（Pinia permissions store,快取權限資料,TTL 30分鐘）
+- [X] T055 [US1] 建立 frontend/composables/useRoles.ts（角色管理 composable,提供 createRole/updateRole/deleteRole/getRoles 方法,依賴 T053）
+- [X] T056 [US1] 建立 frontend/composables/usePermissions.ts（權限查詢 composable,提供 getPermissions/can/canAny 方法,依賴 T054）
+- [X] T057 [P] [US1] 建立 frontend/components/roles/RoleForm.vue（角色表單元件,含名稱、描述、啟用狀態輸入,使用 default.vue 布局）
+- [X] T058 [P] [US1] 建立 frontend/components/roles/PermissionSelector.vue（權限選擇器元件,按模組分組顯示權限）
+- [X] T059 [P] [US1] 建立 frontend/components/roles/ConditionBuilder.vue（條件建構器元件,支援部門/區域/客戶分群條件）
+- [X] T060 [US1] 建立 frontend/pages/roles/index.vue（角色清單頁面,含分頁、篩選、排序,使用 default.vue 布局,依賴 T055, T057-T059）
+- [X] T061 [US1] 建立 frontend/pages/roles/create.vue（建立角色頁面,整合 RoleForm/PermissionSelector/ConditionBuilder,使用 default.vue 布局,依賴 T055, T057-T059）
+- [X] T062 [US1] 建立 frontend/pages/roles/[id]/edit.vue（編輯角色頁面,使用 default.vue 布局,依賴 T055, T057-T059）
+- [X] T063 [US1] 執行所有 User Story 1 測試並確保通過（npm run test:unit && npm run test:e2e && vendor/bin/phpunit）
 
 **Checkpoint**: 此時 User Story 1 應該完全可運作且可獨立測試
 
@@ -122,27 +126,27 @@
 
 ### Implementation for User Story 2
 
-- [ ] T060 [P] [US2] 建立 backend/app/Models/RoleAssignmentModel.php（角色指派模型,含時間性授權驗證）
-- [ ] T061 [US2] 建立 backend/app/Services/RoleAssignmentService.php（角色指派業務邏輯,依賴 T060）
-- [ ] T062 [US2] 建立 backend/app/Controllers/API/RoleAssignmentController.php（Role Assignments API endpoints: POST/DELETE /role-assignments, GET /users/{userId}/roles,依賴 T061）
-- [ ] T063 [US2] 實作時間性授權檢查邏輯（在 RoleAssignmentService 中驗證 valid_from < valid_until）
-- [ ] T064 [US2] 建立排程任務清理過期角色指派（backend/app/Commands/CleanExpiredRolesCommand.php,每 5 分鐘執行以符合 SC-008 要求）
-- [ ] T065 [US2] 建立過期前通知機制（backend/app/Commands/NotifyExpiringRolesCommand.php,檢查 7天/3天/1天前即將過期的角色）
-- [ ] T066 [P] [US2] 建立 frontend/pages/teams/manage.vue（團隊成員權限管理頁面,顯示成員清單及當前角色）
-- [ ] T067 [P] [US2] 建立 frontend/components/teams/MemberPermissionEditor.vue（成員權限編輯器元件,支援指派角色和設定有效期限）
-- [ ] T068 [US2] 建立 frontend/composables/useRoleAssignments.ts（角色指派 composable,提供 assignRole/revokeRole/getUserRoles 方法）
-- [ ] T069 [US2] 在 frontend/pages/teams/manage.vue 中整合 MemberPermissionEditor（依賴 T066-T068）
+- [ ] T064 [P] [US2] 建立 backend/app/Models/RoleAssignmentModel.php（角色指派模型,含時間性授權驗證）
+- [ ] T065 [US2] 建立 backend/app/Services/RoleAssignmentService.php（角色指派業務邏輯,依賴 T064）
+- [ ] T066 [US2] 建立 backend/app/Controllers/API/RoleAssignmentController.php（Role Assignments API endpoints: POST/DELETE /role-assignments, GET /users/{userId}/roles,依賴 T065）
+- [ ] T067 [US2] 實作時間性授權檢查邏輯（在 RoleAssignmentService 中驗證 valid_from < valid_until）
+- [ ] T068 [US2] 建立排程任務清理過期角色指派（backend/app/Commands/CleanExpiredRolesCommand.php,每 5 分鐘執行以符合 SC-008 要求）
+- [ ] T069 [US2] 建立過期前通知機制（backend/app/Commands/NotifyExpiringRolesCommand.php,檢查 7天/3天/1天前即將過期的角色）
+- [ ] T070 [P] [US2] 建立 frontend/pages/teams/manage.vue（團隊成員權限管理頁面,顯示成員清單及當前角色,使用 default.vue 布局）
+- [ ] T071 [P] [US2] 建立 frontend/components/teams/MemberPermissionEditor.vue（成員權限編輯器元件,支援指派角色和設定有效期限）
+- [ ] T072 [US2] 建立 frontend/composables/useRoleAssignments.ts（角色指派 composable,提供 assignRole/revokeRole/getUserRoles 方法）
+- [ ] T073 [US2] 在 frontend/pages/teams/manage.vue 中整合 MemberPermissionEditor（依賴 T070-T072）
 
 ### Additional Features for User Story 2
 
-- [ ] T119 [US2] 在 RoleAssignmentController 中實作延長/縮短角色有效期限功能（PUT /role-assignments/{id}/extend endpoint,支援 FR-013）
-- [ ] T120 [P] [US2] 建立 frontend/components/notifications/ExpiringRoleNotification.vue（過期通知元件,顯示即將過期的角色）
-- [ ] T121 [US2] 在 MemberPermissionEditor.vue 中新增延長/縮短期限 UI（依賴 T119）
-- [ ] T122 [US2] 在 frontend 應用程式 layout 中整合 ExpiringRoleNotification（依賴 T120）
+- [ ] T074 [US2] 在 RoleAssignmentController 中實作延長/縮短角色有效期限功能（PUT /role-assignments/{id}/extend endpoint,支援 FR-013）
+- [ ] T075 [P] [US2] 建立 frontend/components/notifications/ExpiringRoleNotification.vue（過期通知元件,顯示即將過期的角色,整合至 Navbar.vue）
+- [ ] T076 [US2] 在 MemberPermissionEditor.vue 中新增延長/縮短期限 UI（依賴 T074）
+- [ ] T077 [US2] 在 frontend/layouts/default.vue 中整合 ExpiringRoleNotification 到 Navbar（依賴 T075）
 
 ### Tests for User Story 2
 
-- [ ] T123 [P] [US2] 建立 backend/tests/integration/RoleAssignmentAPITest.php（測試角色指派、時間性授權、延長期限的完整流程）
+- [ ] T078 [P] [US2] 建立 backend/tests/integration/RoleAssignmentAPITest.php（測試角色指派、時間性授權、延長期限的完整流程）
 
 **Checkpoint**: 此時 User Stories 1 和 2 應該都能獨立運作
 
@@ -156,19 +160,19 @@
 
 ### Implementation for User Story 3
 
-- [ ] T070 [P] [US3] 建立 backend/app/Libraries/PermissionChecker.php（權限檢查工具類別,含條件限制驗證）
-- [ ] T071 [US3] 建立 backend/app/Services/AuthorizationService.php（權限驗證核心邏輯,合併多角色權限,依賴 T070）
-- [ ] T072 [US3] 建立 backend/app/Filters/PermissionFilter.php（權限檢查 filter,在請求進入 controller 前驗證,依賴 T071）
-- [ ] T073 [US3] 在 RoleController 中整合 PermissionFilter（設定所需權限: role:view, role:edit）
-- [ ] T074 [US3] 建立 backend/app/Services/AuditService.php（審計記錄服務,記錄操作到 audit_logs 表）
-- [ ] T075 [US3] 在所有 API Controllers 中整合 AuditService（記錄成功/失敗/拒絕的操作,依賴 T074）
-- [ ] T076 [US3] 實作條件限制動態查詢生成（在 AuthorizationService 中解析 JSON 條件並生成 SQL WHERE 子句）
-- [ ] T077 [US3] 實作權限快取機制（使用者登入時載入權限到 session,TTL 30分鐘,權限變更時清除）
-- [ ] T078 [P] [US3] 建立 frontend/composables/usePermissions.ts 中的 can() 方法（檢查使用者是否有特定權限）
-- [ ] T079 [P] [US3] 建立 frontend/middleware/permission.ts（路由中介軟體,保護需要權限的頁面）
-- [ ] T080 [US3] 在 frontend UI 元件中整合權限控制（隱藏/禁用無權限的按鈕,使用 v-if="can('permission')"）
-- [ ] T081 [US3] 建立 frontend/pages/permissions/my-permissions.vue（我的權限頁面,顯示使用者當前所有角色和權限）
-- [ ] T082 [US3] 實作權限變更後即時生效機制（後端權限變更時清除相關使用者的 session cache）
+- [ ] T079 [P] [US3] 建立 backend/app/Libraries/PermissionChecker.php（權限檢查工具類別,含條件限制驗證）
+- [ ] T080 [US3] 建立 backend/app/Services/AuthorizationService.php（權限驗證核心邏輯,合併多角色權限,依賴 T079）
+- [ ] T081 [US3] 建立 backend/app/Filters/PermissionFilter.php（權限檢查 filter,在請求進入 controller 前驗證,依賴 T080）
+- [ ] T082 [US3] 在 RoleController 中整合 PermissionFilter（設定所需權限: role:view, role:edit）
+- [ ] T083 [US3] 建立 backend/app/Services/AuditService.php（審計記錄服務,記錄操作到 audit_logs 表）
+- [ ] T084 [US3] 在所有 API Controllers 中整合 AuditService（記錄成功/失敗/拒絕的操作,依賴 T083）
+- [ ] T085 [US3] 實作條件限制動態查詢生成（在 AuthorizationService 中解析 JSON 條件並生成 SQL WHERE 子句）
+- [ ] T086 [US3] 實作權限快取機制（使用者登入時載入權限到 session,TTL 30分鐘,權限變更時清除）
+- [ ] T087 [P] [US3] 建立 frontend/composables/usePermissions.ts 中的 can() 方法（檢查使用者是否有特定權限）
+- [ ] T088 [P] [US3] 建立 frontend/middleware/permission.ts（路由中介軟體,保護需要權限的頁面）
+- [ ] T089 [US3] 在 frontend UI 元件中整合權限控制（隱藏/禁用無權限的按鈕,使用 v-if="can('permission')",符合 FR-038）
+- [ ] T090 [US3] 建立 frontend/pages/permissions/my-permissions.vue（我的權限頁面,顯示使用者當前所有角色和權限,使用 default.vue 布局）
+- [ ] T091 [US3] 實作權限變更後即時生效機制（後端權限變更時清除相關使用者的 session cache）
 
 **Checkpoint**: 此時所有 P1 和 P2 使用者故事應該獨立運作
 
@@ -182,15 +186,15 @@
 
 ### Implementation for User Story 4
 
-- [ ] T083 [P] [US4] 建立 backend/app/Models/AuditLogModel.php（審計記錄模型,含分割表查詢邏輯）
-- [ ] T084 [US4] 建立 backend/app/Services/AuditLogService.php（審計記錄查詢服務,支援多條件篩選,依賴 T083）
-- [ ] T085 [US4] 建立 backend/app/Controllers/API/AuditLogController.php（Audit Logs API endpoints: GET /audit-logs, POST /audit-logs/export,依賴 T084）
-- [ ] T086 [US4] 實作審計記錄匯出功能（在 AuditLogService 中產生 CSV/Excel 報表）
-- [ ] T087 [US4] 實作審計記錄歸檔機制（backend/app/Commands/ArchiveAuditLogsCommand.php,90天後移至 audit_logs_archive 表）
-- [ ] T088 [P] [US4] 建立 frontend/pages/audit/logs.vue（審計記錄查詢頁面,含多條件篩選表單）
-- [ ] T089 [P] [US4] 建立 frontend/components/audit/AuditLogTable.vue（審計記錄表格元件,顯示操作詳情和修改前後值）
-- [ ] T090 [US4] 建立 frontend/composables/useAuditLogs.ts（審計記錄 composable,提供 getAuditLogs/exportAuditLogs 方法）
-- [ ] T091 [US4] 在 frontend/pages/audit/logs.vue 中整合 AuditLogTable 和匯出功能（依賴 T088-T090）
+- [ ] T092 [P] [US4] 建立 backend/app/Models/AuditLogModel.php（審計記錄模型,含分割表查詢邏輯）
+- [ ] T093 [US4] 建立 backend/app/Services/AuditLogService.php（審計記錄查詢服務,支援多條件篩選,依賴 T092）
+- [ ] T094 [US4] 建立 backend/app/Controllers/API/AuditLogController.php（Audit Logs API endpoints: GET /audit-logs, POST /audit-logs/export,依賴 T093）
+- [ ] T095 [US4] 實作審計記錄匯出功能（在 AuditLogService 中產生 CSV/Excel 報表）
+- [ ] T096 [US4] 實作審計記錄歸檔機制（backend/app/Commands/ArchiveAuditLogsCommand.php,90天後移至 audit_logs_archive 表）
+- [ ] T097 [P] [US4] 建立 frontend/pages/audit/logs.vue（審計記錄查詢頁面,含多條件篩選表單,使用 default.vue 布局）
+- [ ] T098 [P] [US4] 建立 frontend/components/audit/AuditLogTable.vue（審計記錄表格元件,顯示操作詳情和修改前後值）
+- [ ] T099 [US4] 建立 frontend/composables/useAuditLogs.ts（審計記錄 composable,提供 getAuditLogs/exportAuditLogs 方法）
+- [ ] T100 [US4] 在 frontend/pages/audit/logs.vue 中整合 AuditLogTable 和匯出功能（依賴 T097-T099）
 
 **Checkpoint**: 審計記錄功能完整可用
 
@@ -204,14 +208,14 @@
 
 ### Implementation for User Story 5
 
-- [ ] T092 [P] [US5] 建立 backend/app/Models/RoleHierarchyModel.php（角色階層 Closure Table 模型）
-- [ ] T093 [US5] 在 RoleService 中實作角色階層管理（建立/更新/刪除階層關係,維護 Closure Table,依賴 T092）
-- [ ] T094 [US5] 更新 PermissionService 查詢邏輯以包含繼承權限（使用 Closure Table JOIN 查詢所有繼承權限）
-- [ ] T095 [US5] 實作角色階層變更時的權限同步機制（父角色權限變更時自動更新所有子角色的繼承權限）
-- [ ] T096 [US5] 在 RoleController 中新增階層相關 endpoints（GET /roles/{id}/hierarchy, PUT /roles/{id}/parent）
-- [ ] T097 [P] [US5] 建立 frontend/components/roles/RoleHierarchyTree.vue（角色階層樹狀結構元件,視覺化顯示繼承關係）
-- [ ] T098 [US5] 在 frontend/pages/roles/[id]/edit.vue 中整合 RoleHierarchyTree（允許設定父角色,依賴 T097）
-- [ ] T099 [US5] 更新 frontend/components/roles/PermissionSelector.vue 以顯示繼承的權限（區分直接權限和繼承權限）
+- [ ] T101 [P] [US5] 建立 backend/app/Models/RoleHierarchyModel.php（角色階層 Closure Table 模型）
+- [ ] T102 [US5] 在 RoleService 中實作角色階層管理（建立/更新/刪除階層關係,維護 Closure Table,依賴 T101）
+- [ ] T103 [US5] 更新 PermissionService 查詢邏輯以包含繼承權限（使用 Closure Table JOIN 查詢所有繼承權限）
+- [ ] T104 [US5] 實作角色階層變更時的權限同步機制（父角色權限變更時自動更新所有子角色的繼承權限,符合 SC-010）
+- [ ] T105 [US5] 在 RoleController 中新增階層相關 endpoints（GET /roles/{id}/hierarchy, PUT /roles/{id}/parent）
+- [ ] T106 [P] [US5] 建立 frontend/components/roles/RoleHierarchyTree.vue（角色階層樹狀結構元件,視覺化顯示繼承關係）
+- [ ] T107 [US5] 在 frontend/pages/roles/[id]/edit.vue 中整合 RoleHierarchyTree（允許設定父角色,依賴 T106）
+- [ ] T108 [US5] 更新 frontend/components/roles/PermissionSelector.vue 以顯示繼承的權限（區分直接權限和繼承權限）
 
 **Checkpoint**: 角色階層功能完整實作
 
@@ -221,25 +225,25 @@
 
 **Purpose**: 改進影響多個使用者故事的部分
 
-- [ ] T100 [P] 效能優化: 在 AuthorizationService 中實作 APCu 快取（快取角色-權限對應,TTL 30分鐘）
-- [ ] T101 [P] 效能優化: 為所有資料庫表新增適當索引（依據 data-model.md 的索引策略）
-- [ ] T102 [P] 效能優化: 實作 Eager Loading 避免 N+1 queries（在所有 Model 中設定關聯預載入）
-- [ ] T103 [P] 安全性強化: 實作 SQL Injection 防護檢查（確保所有查詢使用 Query Builder 或 Prepared Statements）
-- [ ] T104 [P] 安全性強化: 實作 XSS 防護（Nuxt 3 預設轉義,檢查所有 v-html 使用）
-- [ ] T105 [P] 安全性強化: 實作 CSRF 防護（在所有 POST/PUT/DELETE endpoints 檢查 CSRF token）
-- [ ] T106 [P] 建立 API 文件（整合 OpenAPI specs 到 Swagger UI,部署於 /api/docs）
-- [ ] T107 [P] 繁體中文翻譯完整性檢查（確保所有 UI 文字、錯誤訊息、API 回應為繁體中文）
-- [ ] T108 [P] 建立前端 E2E 測試 CI pipeline（GitHub Actions 配置,執行 Playwright 測試）
-- [ ] T109 [P] 建立後端測試 CI pipeline（GitHub Actions 配置,執行 PHPUnit 測試）
-- [ ] T110 [P] 實作結構化 logging（後端使用 Monolog,前端使用 Winston/Pino,含 correlation IDs）
-- [ ] T111 [P] 實作 metrics collection（效能指標收集: API 回應時間、權限檢查時間、資料庫查詢時間）
-- [ ] T112 執行 quickstart.md 驗證（確保開發環境設定指南準確且可執行）
-- [ ] T113 程式碼品質檢查: 執行 PHPStan 靜態分析（backend/）
-- [ ] T114 程式碼品質檢查: 執行 ESLint 和 Prettier（frontend/）
-- [ ] T115 無障礙檢查: 執行 Lighthouse accessibility audit（確保 WCAG 2.1 AA 合規）
-- [ ] T116 效能測試: 執行負載測試驗證效能目標（使用 k6,確保 p95 <200ms for read, <500ms for write）
-- [ ] T117 建立生產環境部署檢查清單（依據 quickstart.md 的部署前檢查清單）
-- [ ] T118 Docker 映像檔安全掃描（使用 Docker Scout 或 Trivy 掃描漏洞）
+- [ ] T109 [P] 效能優化: 在 AuthorizationService 中實作 APCu 快取（快取角色-權限對應,TTL 30分鐘）
+- [ ] T110 [P] 效能優化: 為所有資料庫表新增適當索引（依據 data-model.md 的索引策略）
+- [ ] T111 [P] 效能優化: 實作 Eager Loading 避免 N+1 queries（在所有 Model 中設定關聯預載入）
+- [ ] T112 [P] 安全性強化: 實作 SQL Injection 防護檢查（確保所有查詢使用 Query Builder 或 Prepared Statements）
+- [ ] T113 [P] 安全性強化: 實作 XSS 防護（Nuxt 3 預設轉義,檢查所有 v-html 使用）
+- [ ] T114 [P] 安全性強化: 實作 CSRF 防護（在所有 POST/PUT/DELETE endpoints 檢查 CSRF token）
+- [ ] T115 [P] 建立 API 文件（整合 OpenAPI specs 到 Swagger UI,部署於 /api/docs）
+- [ ] T116 [P] 繁體中文翻譯完整性檢查（確保所有 UI 文字、錯誤訊息、API 回應為繁體中文）
+- [ ] T117 [P] 建立前端 E2E 測試 CI pipeline（GitHub Actions 配置,執行 Playwright 測試）
+- [ ] T118 [P] 建立後端測試 CI pipeline（GitHub Actions 配置,執行 PHPUnit 測試）
+- [ ] T119 [P] 實作結構化 logging（後端使用 Monolog,前端使用 Winston/Pino,含 correlation IDs）
+- [ ] T120 [P] 實作 metrics collection（效能指標收集: API 回應時間、權限檢查時間、資料庫查詢時間）
+- [ ] T121 執行 quickstart.md 驗證（確保開發環境設定指南準確且可執行）
+- [ ] T122 程式碼品質檢查: 執行 PHPStan 靜態分析（backend/）
+- [ ] T123 程式碼品質檢查: 執行 ESLint 和 Prettier（frontend/）
+- [ ] T124 無障礙檢查: 執行 Lighthouse accessibility audit（確保 WCAG 2.1 AA 合規）
+- [ ] T125 效能測試: 執行負載測試驗證效能目標（使用 k6,確保 p95 <200ms for read, <500ms for write）
+- [ ] T126 建立生產環境部署檢查清單（依據 quickstart.md 的部署前檢查清單）
+- [ ] T127 Docker 映像檔安全掃描（使用 Docker Scout 或 Trivy 掃描漏洞）
 
 ---
 
@@ -273,13 +277,13 @@
 ### Parallel Opportunities
 
 - Phase 1: T002-T004, T007-T009, T010-T013 可平行執行
-- Phase 2: T015-T021, T023-T024, T026-T032 可平行執行
-- User Story 1 測試: T034-T038 可平行執行
-- User Story 1 Models: T039-T042 可平行執行
-- User Story 1 Frontend stores: T049-T050 可平行執行
-- User Story 1 Frontend components: T053-T055 可平行執行
+- Phase 2: T015-T021, T023-T024, T026-T037 可平行執行
+- User Story 1 測試: T038-T042 可平行執行
+- User Story 1 Models: T043-T046 可平行執行
+- User Story 1 Frontend stores: T053-T054 可平行執行
+- User Story 1 Frontend components: T057-T059 可平行執行
 - 一旦 Foundational 完成,所有使用者故事可由不同團隊成員平行開發
-- Phase 8: 大部分任務（T100-T111, T113-T115, T118）可平行執行
+- Phase 8: 大部分任務（T109-T120, T122-T124, T127）可平行執行
 
 ---
 
@@ -356,7 +360,7 @@ Task: "建立 frontend/components/roles/ConditionBuilder.vue"
 
 ## Summary
 
-**總任務數**: 118
+**總任務數**: 122
 **使用者故事數**: 5
 **MVP 範圍**: User Story 1（P1 - 系統管理員建立自訂角色與權限）
 
@@ -367,12 +371,12 @@ Task: "建立 frontend/components/roles/ConditionBuilder.vue"
 - User Story 4 (P3): 9 任務
 - User Story 5 (P3): 8 任務
 - Setup: 13 任務
-- Foundational: 20 任務
+- Foundational: 24 任務（含 4 個布局元件任務）
 - Polish: 19 任務
 
 **平行機會**:
 - Setup 階段: 10 個任務可平行
-- Foundational 階段: 17 個任務可平行
+- Foundational 階段: 21 個任務可平行
 - User Story 1: 11 個任務可平行
 - User Story 2-5: 一旦 Foundational 完成,所有故事可平行開發
 - Polish 階段: 15 個任務可平行

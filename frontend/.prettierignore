@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build outputs  
+dist/
+build/
+.output/
+.nuxt/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated files
+.nuxt/
+.output/
+
+# Markdown (preserve formatting)
+*.md
+
+# Config files that should maintain specific formatting
+.eslintrc.js
+.eslintrc.cjs

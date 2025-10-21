@@ -1,0 +1,87 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+*.md
+docs/
+specs/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env*
+!.env.example
+
+# Dependencies (will be installed in container)
+node_modules/
+vendor/
+bower_components/
+
+# Build artifacts
+dist/
+build/
+.output/
+.nuxt/
+target/
+out/
+
+# Test coverage
+coverage/
+.nyc_output/
+htmlcov/
+.pytest_cache/
+.phpunit.result.cache
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+Dockerfile*
+
+# Backend specific
+backend/writable/logs/
+backend/writable/cache/
+backend/writable/session/
+backend/public/uploads/
+
+# Frontend specific
+frontend/.output/
+frontend/.nuxt/
+frontend/dist/
+frontend/node_modules/
