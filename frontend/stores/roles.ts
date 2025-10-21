@@ -44,8 +44,8 @@ export interface Permission {
 export interface ConditionRule {
   id?: number
   permission_id?: number | null
-  condition_type: 'department' | 'region' | 'customer_group' | 'order_status' | 'amount_range'
-  operator: 'equals' | 'not_equals' | 'in' | 'not_in' | 'greater_than' | 'less_than' | 'between'
+  condition_type: 'department' | 'region' | 'customer_group' | 'order_status' | 'amount_range' | string
+  operator: 'equals' | 'not_equals' | 'in' | 'not_in' | 'greater_than' | 'less_than' | 'between' | string
   condition_value: any
   field_name?: string
 }

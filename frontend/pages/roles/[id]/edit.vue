@@ -159,14 +159,14 @@ const loadRole = async () => {
  */
 const handleUpdateRole = async (roleData: Partial<Role>) => {
   try {
-    const data: Partial<Role> = {
+    const data: any = {
       ...roleData,
     }
 
     // Only include permissions and conditions for non-system roles
     if (!role.value?.is_system) {
-      data.permissions = selectedPermissions.value as any
-      data.condition_rules = conditionRules.value as any
+      data.permissions = selectedPermissions.value
+      data.condition_rules = conditionRules.value
     }
 
     await updateRole(roleId.value, data)
