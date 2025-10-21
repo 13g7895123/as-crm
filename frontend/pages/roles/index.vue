@@ -294,7 +294,7 @@ const { getRoles, deleteRole, roles, pagination, loading, error } = useRoles()
 const filters = reactive({
   search: '',
   is_active: undefined as boolean | undefined,
-  sort: 'created_at',
+  sort: 'created_at' as 'name' | 'created_at' | 'updated_at',
   order: 'desc' as 'asc' | 'desc',
   page: 1,
   per_page: 20,

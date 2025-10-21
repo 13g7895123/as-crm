@@ -35,7 +35,7 @@ export function usePermissions() {
    * Get authorization headers
    */
   const getHeaders = () => {
-    const token = authStore.token
+    const token = authStore.accessToken
     return {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : '',

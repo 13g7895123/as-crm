@@ -39,9 +39,7 @@ export default defineNuxtConfig({
   },
 
   // Nuxt UI 配置
-  ui: {
-    icons: ['heroicons', 'mdi'],
-  },
+  ui: {},
 
   // CSS 配置
   css: [],

@@ -10,11 +10,26 @@ export interface Role {
   display_name: string
   description?: string
   level: number
+  is_active: boolean
   is_system: boolean
   created_at: string
   updated_at?: string
   deleted_at?: string
   permissions?: Permission[]
+  condition_rules?: ConditionRule[]
+}
+
+/**
+ * Role input for create/update - permissions are IDs
+ */
+export interface RoleInput {
+  name?: string
+  display_name?: string
+  description?: string
+  level?: number
+  is_active?: boolean
+  is_system?: boolean
+  permissions?: number[]
   condition_rules?: ConditionRule[]
 }
 

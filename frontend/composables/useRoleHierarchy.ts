@@ -41,7 +41,7 @@ export function useRoleHierarchy() {
   const getHeaders = (): HeadersInit => {
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authStore.token}`,
+      'Authorization': `Bearer ${authStore.accessToken}`,
     }
   }
 

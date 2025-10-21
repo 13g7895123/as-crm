@@ -36,7 +36,7 @@
     </div>
 
     <!-- Filters -->
-    <AuditLogFilters
+    <AuditLogFiltersComponent
       v-model="filters"
       @apply="applyFilters"
       @reset="resetFilters"
@@ -256,7 +256,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuditLogs } from '~/composables/useAuditLogs'
 import type { AuditLogFilters, AuditLog } from '~/composables/useAuditLogs'
-import AuditLogFilters from '~/components/audit-logs/AuditLogFilters.vue'
+import AuditLogFiltersComponent from '~/components/audit-logs/AuditLogFilters.vue'
 
 definePageMeta({
   title: '審計記錄',

@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { useRolesStore, type Role, type RoleFilters } from '~/stores/roles'
+import { useRolesStore, type Role, type RoleInput, type RoleFilters } from '~/stores/roles'
 import { useAuthStore } from '~/stores/auth'
 
 /**
@@ -36,7 +36,7 @@ export function useRoles() {
    * Get authorization headers
    */
   const getHeaders = () => {
-    const token = authStore.token
+    const token = authStore.accessToken
     return {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : '',
@@ -129,7 +129,7 @@ export function useRoles() {
   /**
    * Create a new role
    */
-  const createRole = async (roleData: Partial<Role>): Promise<Role> => {
+  const createRole = async (roleData: RoleInput): Promise<Role> => {
     loading.value = true
     error.value = null
 
@@ -173,7 +173,7 @@ export function useRoles() {
   /**
    * Update an existing role
    */
-  const updateRole = async (id: number, roleData: Partial<Role>): Promise<Role> => {
+  const updateRole = async (id: number, roleData: RoleInput): Promise<Role> => {
     loading.value = true
     error.value = null
 
