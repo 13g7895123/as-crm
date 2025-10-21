@@ -46,9 +46,9 @@ mkdir -p docker/mariadb
 mkdir -p docker/nginx/conf.d
 mkdir -p docker/nginx/ssl
 
-# Set permissions
-chmod -R 777 backend/writable
-chmod -R 777 frontend/.nuxt
+# Set permissions (ignore errors for files we don't own)
+chmod -R 777 backend/writable 2>/dev/null || true
+chmod -R 777 frontend/.nuxt 2>/dev/null || true
 
 echo -e "${GREEN}✓ 目錄建立完成${NC}"
 
@@ -104,10 +104,12 @@ fi
 source .env
 
 # Create MariaDB init script if not exists
-if [ ! -f docker/mariadb/init.sql ]; then
+mkdir -p docker/mysql-init
+INIT_SQL_FILE="docker/mysql-init/init-db.sql"
+if [ ! -f "$INIT_SQL_FILE" ]; then
     echo ""
     echo "建立 MariaDB 初始化腳本..."
-    cat > docker/mariadb/init.sql <<EOF
+    cat > "$INIT_SQL_FILE" <<EOF
 -- MariaDB 開發環境初始化腳本
 ALTER DATABASE ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

@@ -35,7 +35,7 @@ class CreateRoleAssignmentsTable extends Migration
             'valid_from' => [
                 'type'    => 'DATETIME',
                 'null'    => false,
-                'default' => 'CURRENT_TIMESTAMP',
+                
                 'comment' => '有效開始時間',
             ],
             'valid_until' => [
@@ -50,13 +50,13 @@ class CreateRoleAssignmentsTable extends Migration
                 'comment'  => '指派者 ID',
             ],
             'assigned_at' => [
-                'type'    => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'    => false,
-                'default' => 'CURRENT_TIMESTAMP',
+                
                 'comment' => '指派時間',
             ],
             'revoked_at' => [
-                'type'    => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'    => true,
                 'comment' => '撤銷時間',
             ],

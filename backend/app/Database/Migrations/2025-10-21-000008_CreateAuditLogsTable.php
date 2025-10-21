@@ -81,9 +81,9 @@ class CreateAuditLogsTable extends Migration
                 'comment'    => '請求 ID (correlation ID for tracing)',
             ],
             'created_at' => [
-                'type'    => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'    => false,
-                'default' => 'CURRENT_TIMESTAMP',
+                
                 'comment' => '操作時間',
             ],
         ]);
@@ -183,14 +183,14 @@ class CreateAuditLogsTable extends Migration
                 'comment'    => '請求 ID',
             ],
             'created_at' => [
-                'type'    => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'    => false,
                 'comment' => '操作時間',
             ],
             'archived_at' => [
-                'type'    => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'    => false,
-                'default' => 'CURRENT_TIMESTAMP',
+                
                 'comment' => '歸檔時間',
             ],
         ]);

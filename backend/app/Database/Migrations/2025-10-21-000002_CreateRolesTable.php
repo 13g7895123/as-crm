@@ -64,16 +64,14 @@ class CreateRolesTable extends Migration
                 'comment'  => '建立者 ID',
             ],
             'created_at' => [
-                'type'    => 'TIMESTAMP',
+                'type'    => 'DATETIME',
                 'null'    => false,
-                'default' => 'CURRENT_TIMESTAMP',
                 'comment' => '建立時間',
             ],
             'updated_at' => [
-                'type'      => 'TIMESTAMP',
-                'null'      => true,
-                'on_update' => 'CURRENT_TIMESTAMP',
-                'comment'   => '更新時間',
+                'type'    => 'DATETIME',
+                'null'    => true,
+                'comment' => '更新時間',
             ],
         ]);
 

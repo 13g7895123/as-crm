@@ -53,10 +53,10 @@
 - [X] T019 [P] 建立 backend/app/Database/Migrations/2025-10-21-000006-create-role-assignments-table.php
 - [X] T020 [P] 建立 backend/app/Database/Migrations/2025-10-21-000007-create-role-hierarchy-table.php
 - [X] T021 [P] 建立 backend/app/Database/Migrations/2025-10-21-000008-create-audit-logs-table.php（含分割策略）
-- [ ] T022 執行所有資料庫 migrations（php spark migrate）
+- [X] T022 執行所有資料庫 migrations（php spark migrate）
 - [X] T023 [P] 建立 backend/app/Database/Seeds/RoleSeeder.php（預設角色: 系統管理員、業務主管、業務人員、客服）
 - [X] T024 [P] 建立 backend/app/Database/Seeds/PermissionSeeder.php（客戶/訂單/報表/角色/使用者權限管理模組的 view/edit/export/assign 權限）
-- [ ] T025 執行資料庫 seeders（php spark db:seed RoleSeeder && php spark db:seed PermissionSeeder）
+- [X] T025 執行資料庫 seeders（php spark db:seed RoleSeeder && php spark db:seed PermissionSeeder）
 - [X] T026 [P] 配置 backend/app/Config/Routes.php（API v1 路由結構）
 - [X] T027 [P] 建立 backend/app/Filters/AuthFilter.php（JWT 身份驗證 filter）
 - [X] T028 [P] 配置 backend/app/Config/Cors.php（CORS 設定,允許前端網域）
@@ -80,35 +80,35 @@
 
 **NOTE: 先寫這些測試,確保它們在實作前失敗**
 
-- [ ] T034 [P] [US1] 建立 backend/tests/contract/RoleContractTest.php（測試 roles API 符合 OpenAPI 規格）
-- [ ] T035 [P] [US1] 建立 backend/tests/integration/RoleAPITest.php（測試建立/更新/刪除角色的完整流程）
-- [ ] T036 [P] [US1] 建立 backend/tests/unit/RoleServiceTest.php（測試 RoleService 的業務邏輯）
-- [ ] T037 [P] [US1] 建立 frontend/tests/unit/useRoles.test.ts（測試 useRoles composable）
-- [ ] T038 [P] [US1] 建立 frontend/tests/e2e/role-management.spec.ts（E2E 測試角色管理完整流程）
+- [X] T034 [P] [US1] 建立 backend/tests/contract/RoleContractTest.php（測試 roles API 符合 OpenAPI 規格）
+- [X] T035 [P] [US1] 建立 backend/tests/integration/RoleAPITest.php（測試建立/更新/刪除角色的完整流程）
+- [X] T036 [P] [US1] 建立 backend/tests/unit/RoleServiceTest.php（測試 RoleService 的業務邏輯）
+- [X] T037 [P] [US1] 建立 frontend/tests/unit/useRoles.test.ts（測試 useRoles composable）
+- [X] T038 [P] [US1] 建立 frontend/tests/e2e/role-management.spec.ts（E2E 測試角色管理完整流程）
 
 ### Implementation for User Story 1
 
-- [ ] T039 [P] [US1] 建立 backend/app/Models/RoleModel.php（角色資料模型,含驗證規則）
-- [ ] T040 [P] [US1] 建立 backend/app/Models/PermissionModel.php（權限資料模型）
-- [ ] T041 [P] [US1] 建立 backend/app/Models/RolePermissionModel.php（角色-權限關聯模型）
-- [ ] T042 [P] [US1] 建立 backend/app/Models/ConditionRuleModel.php（條件限制規則模型,含 JSON 解析）
-- [ ] T043 [US1] 建立 backend/app/Services/RoleService.php（角色 CRUD 業務邏輯,依賴 T039-T042）
-- [ ] T044 [US1] 建立 backend/app/Services/PermissionService.php（權限查詢業務邏輯,依賴 T040）
-- [ ] T045 [US1] 建立 backend/app/Controllers/API/RoleController.php（Roles API endpoints: GET/POST/PUT/DELETE /roles,依賴 T043-T044）
-- [ ] T046 [US1] 建立 backend/app/Controllers/API/PermissionController.php（Permissions API endpoints: GET /permissions,依賴 T044）
-- [ ] T047 [US1] 在 RoleService 中實作條件限制驗證邏輯（驗證 condition_type 和 operator 的有效性）
-- [ ] T048 [US1] 在 RoleController 中新增錯誤處理和驗證（系統角色不可刪除、name 唯一性檢查）
-- [ ] T049 [P] [US1] 建立 frontend/stores/roles.ts（Pinia roles store,管理角色列表狀態）
-- [ ] T050 [P] [US1] 建立 frontend/stores/permissions.ts（Pinia permissions store,快取權限資料,TTL 30分鐘）
-- [ ] T051 [US1] 建立 frontend/composables/useRoles.ts（角色管理 composable,提供 createRole/updateRole/deleteRole/getRoles 方法,依賴 T049）
-- [ ] T052 [US1] 建立 frontend/composables/usePermissions.ts（權限查詢 composable,提供 getPermissions/can/canAny 方法,依賴 T050）
-- [ ] T053 [P] [US1] 建立 frontend/components/roles/RoleForm.vue（角色表單元件,含名稱、描述、啟用狀態輸入）
-- [ ] T054 [P] [US1] 建立 frontend/components/roles/PermissionSelector.vue（權限選擇器元件,按模組分組顯示權限）
-- [ ] T055 [P] [US1] 建立 frontend/components/roles/ConditionBuilder.vue（條件建構器元件,支援部門/區域/客戶分群條件）
-- [ ] T056 [US1] 建立 frontend/pages/roles/index.vue（角色清單頁面,含分頁、篩選、排序,依賴 T051, T053-T055）
-- [ ] T057 [US1] 建立 frontend/pages/roles/create.vue（建立角色頁面,整合 RoleForm/PermissionSelector/ConditionBuilder,依賴 T051, T053-T055）
-- [ ] T058 [US1] 建立 frontend/pages/roles/[id]/edit.vue（編輯角色頁面,依賴 T051, T053-T055）
-- [ ] T059 [US1] 執行所有 User Story 1 測試並確保通過（npm run test:unit && npm run test:e2e && vendor/bin/phpunit）
+- [X] T039 [P] [US1] 建立 backend/app/Models/RoleModel.php（角色資料模型,含驗證規則）
+- [X] T040 [P] [US1] 建立 backend/app/Models/PermissionModel.php（權限資料模型）
+- [X] T041 [P] [US1] 建立 backend/app/Models/RolePermissionModel.php（角色-權限關聯模型）
+- [X] T042 [P] [US1] 建立 backend/app/Models/ConditionRuleModel.php（條件限制規則模型,含 JSON 解析）
+- [X] T043 [US1] 建立 backend/app/Services/RoleService.php（角色 CRUD 業務邏輯,依賴 T039-T042）
+- [X] T044 [US1] 建立 backend/app/Services/PermissionService.php（權限查詢業務邏輯,依賴 T040）
+- [X] T045 [US1] 建立 backend/app/Controllers/API/RoleController.php（Roles API endpoints: GET/POST/PUT/DELETE /roles,依賴 T043-T044）
+- [X] T046 [US1] 建立 backend/app/Controllers/API/PermissionController.php（Permissions API endpoints: GET /permissions,依賴 T044）
+- [X] T047 [US1] 在 RoleService 中實作條件限制驗證邏輯（驗證 condition_type 和 operator 的有效性）
+- [X] T048 [US1] 在 RoleController 中新增錯誤處理和驗證（系統角色不可刪除、name 唯一性檢查）
+- [X] T049 [P] [US1] 建立 frontend/stores/roles.ts（Pinia roles store,管理角色列表狀態）
+- [X] T050 [P] [US1] 建立 frontend/stores/permissions.ts（Pinia permissions store,快取權限資料,TTL 30分鐘）
+- [X] T051 [US1] 建立 frontend/composables/useRoles.ts（角色管理 composable,提供 createRole/updateRole/deleteRole/getRoles 方法,依賴 T049）
+- [X] T052 [US1] 建立 frontend/composables/usePermissions.ts（權限查詢 composable,提供 getPermissions/can/canAny 方法,依賴 T050）
+- [X] T053 [P] [US1] 建立 frontend/components/roles/RoleForm.vue（角色表單元件,含名稱、描述、啟用狀態輸入）
+- [X] T054 [P] [US1] 建立 frontend/components/roles/PermissionSelector.vue（權限選擇器元件,按模組分組顯示權限）
+- [X] T055 [P] [US1] 建立 frontend/components/roles/ConditionBuilder.vue（條件建構器元件,支援部門/區域/客戶分群條件）
+- [X] T056 [US1] 建立 frontend/pages/roles/index.vue（角色清單頁面,含分頁、篩選、排序,依賴 T051, T053-T055）
+- [X] T057 [US1] 建立 frontend/pages/roles/create.vue（建立角色頁面,整合 RoleForm/PermissionSelector/ConditionBuilder,依賴 T051, T053-T055）
+- [X] T058 [US1] 建立 frontend/pages/roles/[id]/edit.vue（編輯角色頁面,依賴 T051, T053-T055）
+- [X] T059 [US1] 執行所有 User Story 1 測試並確保通過（npm run test:unit && npm run test:e2e && vendor/bin/phpunit）
 
 **Checkpoint**: 此時 User Story 1 應該完全可運作且可獨立測試
 

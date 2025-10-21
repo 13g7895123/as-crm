@@ -50,15 +50,15 @@ class CreateConditionRulesTable extends Migration
                 'comment' => '條件值 (JSON 格式,依 condition_type 而定)',
             ],
             'created_at' => [
-                'type'    => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'    => false,
-                'default' => 'CURRENT_TIMESTAMP',
+                
                 'comment' => '建立時間',
             ],
             'updated_at' => [
-                'type'      => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'      => true,
-                'on_update' => 'CURRENT_TIMESTAMP',
+                
                 'comment'   => '更新時間',
             ],
         ]);

@@ -1,0 +1,302 @@
+<?php
+
+namespace App\Database\Migrations;
+
+use CodeIgniter\Database\Migration;
+
+/**
+ * Add Performance Indexes Migration
+ *
+ * Adds indexes to improve query performance across all RBAC tables
+ * Based on common query patterns and foreign key relationships
+ *
+ * @package App\Database\Migrations
+ */
+class AddPerformanceIndexes extends Migration
+{
+    /**
+     * Run the migrations
+     */
+    public function up(): void
+    {
+        $db = \Config\Database::connect();
+
+        // ----------------------------------------------------------------
+        // Roles table indexes
+        // ----------------------------------------------------------------
+
+        // Index for filtering by system status and active status
+        if (!$this->indexExists('roles', 'idx_roles_is_system')) {
+            $this->db->query('CREATE INDEX idx_roles_is_system ON roles (is_system)');
+        }
+
+        if (!$this->indexExists('roles', 'idx_roles_is_active')) {
+            $this->db->query('CREATE INDEX idx_roles_is_active ON roles (is_active)');
+        }
+
+        // Composite index for common filtering patterns
+        if (!$this->indexExists('roles', 'idx_roles_active_system')) {
+            $this->db->query('CREATE INDEX idx_roles_active_system ON roles (is_active, is_system)');
+        }
+
+        // Index for role name searches
+        if (!$this->indexExists('roles', 'idx_roles_name')) {
+            $this->db->query('CREATE INDEX idx_roles_name ON roles (name)');
+        }
+
+        // ----------------------------------------------------------------
+        // Permissions table indexes
+        // ----------------------------------------------------------------
+
+        // Index for module grouping
+        if (!$this->indexExists('permissions', 'idx_permissions_module')) {
+            $this->db->query('CREATE INDEX idx_permissions_module ON permissions (module)');
+        }
+
+        // Index for permission name searches
+        if (!$this->indexExists('permissions', 'idx_permissions_name')) {
+            $this->db->query('CREATE INDEX idx_permissions_name ON permissions (name)');
+        }
+
+        // Index for system permission filtering
+        if (!$this->indexExists('permissions', 'idx_permissions_is_system')) {
+            $this->db->query('CREATE INDEX idx_permissions_is_system ON permissions (is_system)');
+        }
+
+        // Composite index for module + name queries
+        if (!$this->indexExists('permissions', 'idx_permissions_module_name')) {
+            $this->db->query('CREATE INDEX idx_permissions_module_name ON permissions (module, name)');
+        }
+
+        // ----------------------------------------------------------------
+        // Role Permissions table indexes
+        // ----------------------------------------------------------------
+
+        // These are likely already indexed via foreign keys, but we ensure they exist
+        if (!$this->indexExists('role_permissions', 'idx_role_permissions_role_id')) {
+            $this->db->query('CREATE INDEX idx_role_permissions_role_id ON role_permissions (role_id)');
+        }
+
+        if (!$this->indexExists('role_permissions', 'idx_role_permissions_permission_id')) {
+            $this->db->query('CREATE INDEX idx_role_permissions_permission_id ON role_permissions (permission_id)');
+        }
+
+        // Index for scope-based queries
+        if (!$this->indexExists('role_permissions', 'idx_role_permissions_scope')) {
+            $this->db->query('CREATE INDEX idx_role_permissions_scope ON role_permissions (scope_type, scope_id)');
+        }
+
+        // ----------------------------------------------------------------
+        // User Roles table indexes
+        // ----------------------------------------------------------------
+
+        // Foreign key indexes
+        if (!$this->indexExists('user_roles', 'idx_user_roles_user_id')) {
+            $this->db->query('CREATE INDEX idx_user_roles_user_id ON user_roles (user_id)');
+        }
+
+        if (!$this->indexExists('user_roles', 'idx_user_roles_role_id')) {
+            $this->db->query('CREATE INDEX idx_user_roles_role_id ON user_roles (role_id)');
+        }
+
+        // Index for status filtering
+        if (!$this->indexExists('user_roles', 'idx_user_roles_status')) {
+            $this->db->query('CREATE INDEX idx_user_roles_status ON user_roles (status)');
+        }
+
+        // Index for time-based queries
+        if (!$this->indexExists('user_roles', 'idx_user_roles_valid_from')) {
+            $this->db->query('CREATE INDEX idx_user_roles_valid_from ON user_roles (valid_from)');
+        }
+
+        if (!$this->indexExists('user_roles', 'idx_user_roles_valid_until')) {
+            $this->db->query('CREATE INDEX idx_user_roles_valid_until ON user_roles (valid_until)');
+        }
+
+        // Composite index for user + status queries
+        if (!$this->indexExists('user_roles', 'idx_user_roles_user_status')) {
+            $this->db->query('CREATE INDEX idx_user_roles_user_status ON user_roles (user_id, status)');
+        }
+
+        // Composite index for validity checks
+        if (!$this->indexExists('user_roles', 'idx_user_roles_validity')) {
+            $this->db->query('CREATE INDEX idx_user_roles_validity ON user_roles (user_id, valid_from, valid_until)');
+        }
+
+        // Index for finding expiring roles
+        if (!$this->indexExists('user_roles', 'idx_user_roles_expiring')) {
+            $this->db->query('CREATE INDEX idx_user_roles_expiring ON user_roles (status, valid_until)');
+        }
+
+        // ----------------------------------------------------------------
+        // Role Hierarchy table indexes
+        // ----------------------------------------------------------------
+
+        // Foreign key indexes for hierarchy traversal
+        if (!$this->indexExists('role_hierarchy', 'idx_role_hierarchy_parent')) {
+            $this->db->query('CREATE INDEX idx_role_hierarchy_parent ON role_hierarchy (parent_role_id)');
+        }
+
+        if (!$this->indexExists('role_hierarchy', 'idx_role_hierarchy_child')) {
+            $this->db->query('CREATE INDEX idx_role_hierarchy_child ON role_hierarchy (child_role_id)');
+        }
+
+        // Composite index for relationship lookups
+        if (!$this->indexExists('role_hierarchy', 'idx_role_hierarchy_relationship')) {
+            $this->db->query('CREATE INDEX idx_role_hierarchy_relationship ON role_hierarchy (parent_role_id, child_role_id)');
+        }
+
+        // ----------------------------------------------------------------
+        // Audit Logs table indexes
+        // ----------------------------------------------------------------
+
+        // Index for user-specific log queries
+        if (!$this->indexExists('audit_logs', 'idx_audit_logs_user_id')) {
+            $this->db->query('CREATE INDEX idx_audit_logs_user_id ON audit_logs (user_id)');
+        }
+
+        // Index for entity/resource audit trails
+        if (!$this->indexExists('audit_logs', 'idx_audit_logs_entity_type')) {
+            $this->db->query('CREATE INDEX idx_audit_logs_entity_type ON audit_logs (entity_type)');
+        }
+
+        if (!$this->indexExists('audit_logs', 'idx_audit_logs_entity_id')) {
+            $this->db->query('CREATE INDEX idx_audit_logs_entity_id ON audit_logs (entity_id)');
+        }
+
+        // Composite index for resource audit trails
+        if (!$this->indexExists('audit_logs', 'idx_audit_logs_entity')) {
+            $this->db->query('CREATE INDEX idx_audit_logs_entity ON audit_logs (entity_type, entity_id)');
+        }
+
+        // Index for action filtering
+        if (!$this->indexExists('audit_logs', 'idx_audit_logs_action')) {
+            $this->db->query('CREATE INDEX idx_audit_logs_action ON audit_logs (action)');
+        }
+
+        // Index for date range queries (most common)
+        if (!$this->indexExists('audit_logs', 'idx_audit_logs_created_at')) {
+            $this->db->query('CREATE INDEX idx_audit_logs_created_at ON audit_logs (created_at)');
+        }
+
+        // Composite index for user activity timeline
+        if (!$this->indexExists('audit_logs', 'idx_audit_logs_user_timeline')) {
+            $this->db->query('CREATE INDEX idx_audit_logs_user_timeline ON audit_logs (user_id, created_at)');
+        }
+
+        // Composite index for resource activity timeline
+        if (!$this->indexExists('audit_logs', 'idx_audit_logs_entity_timeline')) {
+            $this->db->query('CREATE INDEX idx_audit_logs_entity_timeline ON audit_logs (entity_type, entity_id, created_at)');
+        }
+
+        // Index for IP address lookups (security analysis)
+        if (!$this->indexExists('audit_logs', 'idx_audit_logs_ip_address')) {
+            $this->db->query('CREATE INDEX idx_audit_logs_ip_address ON audit_logs (ip_address)');
+        }
+
+        echo "Performance indexes created successfully.\n";
+    }
+
+    /**
+     * Reverse the migrations
+     */
+    public function down(): void
+    {
+        $db = \Config\Database::connect();
+
+        // ----------------------------------------------------------------
+        // Drop Roles table indexes
+        // ----------------------------------------------------------------
+        $this->dropIndexIfExists('roles', 'idx_roles_is_system');
+        $this->dropIndexIfExists('roles', 'idx_roles_is_active');
+        $this->dropIndexIfExists('roles', 'idx_roles_active_system');
+        $this->dropIndexIfExists('roles', 'idx_roles_name');
+
+        // ----------------------------------------------------------------
+        // Drop Permissions table indexes
+        // ----------------------------------------------------------------
+        $this->dropIndexIfExists('permissions', 'idx_permissions_module');
+        $this->dropIndexIfExists('permissions', 'idx_permissions_name');
+        $this->dropIndexIfExists('permissions', 'idx_permissions_is_system');
+        $this->dropIndexIfExists('permissions', 'idx_permissions_module_name');
+
+        // ----------------------------------------------------------------
+        // Drop Role Permissions table indexes
+        // ----------------------------------------------------------------
+        $this->dropIndexIfExists('role_permissions', 'idx_role_permissions_role_id');
+        $this->dropIndexIfExists('role_permissions', 'idx_role_permissions_permission_id');
+        $this->dropIndexIfExists('role_permissions', 'idx_role_permissions_scope');
+
+        // ----------------------------------------------------------------
+        // Drop User Roles table indexes
+        // ----------------------------------------------------------------
+        $this->dropIndexIfExists('user_roles', 'idx_user_roles_user_id');
+        $this->dropIndexIfExists('user_roles', 'idx_user_roles_role_id');
+        $this->dropIndexIfExists('user_roles', 'idx_user_roles_status');
+        $this->dropIndexIfExists('user_roles', 'idx_user_roles_valid_from');
+        $this->dropIndexIfExists('user_roles', 'idx_user_roles_valid_until');
+        $this->dropIndexIfExists('user_roles', 'idx_user_roles_user_status');
+        $this->dropIndexIfExists('user_roles', 'idx_user_roles_validity');
+        $this->dropIndexIfExists('user_roles', 'idx_user_roles_expiring');
+
+        // ----------------------------------------------------------------
+        // Drop Role Hierarchy table indexes
+        // ----------------------------------------------------------------
+        $this->dropIndexIfExists('role_hierarchy', 'idx_role_hierarchy_parent');
+        $this->dropIndexIfExists('role_hierarchy', 'idx_role_hierarchy_child');
+        $this->dropIndexIfExists('role_hierarchy', 'idx_role_hierarchy_relationship');
+
+        // ----------------------------------------------------------------
+        // Drop Audit Logs table indexes
+        // ----------------------------------------------------------------
+        $this->dropIndexIfExists('audit_logs', 'idx_audit_logs_user_id');
+        $this->dropIndexIfExists('audit_logs', 'idx_audit_logs_entity_type');
+        $this->dropIndexIfExists('audit_logs', 'idx_audit_logs_entity_id');
+        $this->dropIndexIfExists('audit_logs', 'idx_audit_logs_entity');
+        $this->dropIndexIfExists('audit_logs', 'idx_audit_logs_action');
+        $this->dropIndexIfExists('audit_logs', 'idx_audit_logs_created_at');
+        $this->dropIndexIfExists('audit_logs', 'idx_audit_logs_user_timeline');
+        $this->dropIndexIfExists('audit_logs', 'idx_audit_logs_entity_timeline');
+        $this->dropIndexIfExists('audit_logs', 'idx_audit_logs_ip_address');
+
+        echo "Performance indexes dropped successfully.\n";
+    }
+
+    /**
+     * Check if an index exists
+     *
+     * @param string $table Table name
+     * @param string $indexName Index name
+     * @return bool
+     */
+    private function indexExists(string $table, string $indexName): bool
+    {
+        $db = \Config\Database::connect();
+        $database = $db->getDatabase();
+
+        $query = $db->query("
+            SELECT COUNT(*) as count
+            FROM information_schema.statistics
+            WHERE table_schema = ?
+            AND table_name = ?
+            AND index_name = ?
+        ", [$database, $table, $indexName]);
+
+        $result = $query->getRow();
+        return $result->count > 0;
+    }
+
+    /**
+     * Drop index if it exists
+     *
+     * @param string $table Table name
+     * @param string $indexName Index name
+     * @return void
+     */
+    private function dropIndexIfExists(string $table, string $indexName): void
+    {
+        if ($this->indexExists($table, $indexName)) {
+            $this->db->query("DROP INDEX {$indexName} ON {$table}");
+        }
+    }
+}

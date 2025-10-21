@@ -4,7 +4,7 @@
 # 用於開發環境的 Node.js 映像
 # 支援 HMR (Hot Module Replacement)
 
-FROM node:18-alpine
+FROM node:20-alpine
 
 LABEL maintainer="CRM RBAC Team"
 LABEL description="CRM RBAC Frontend Development Environment"

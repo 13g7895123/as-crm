@@ -33,9 +33,9 @@ class CreateRolePermissionsTable extends Migration
                 'comment'  => '權限 ID',
             ],
             'created_at' => [
-                'type'    => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'    => false,
-                'default' => 'CURRENT_TIMESTAMP',
+                
                 'comment' => '建立時間',
             ],
         ]);

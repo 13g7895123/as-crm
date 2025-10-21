@@ -2,26 +2,81 @@
 <?php
 
 /**
- * CodeIgniter Spark CLI Tool
+ * This file is part of CodeIgniter 4 framework.
  *
- * CRM RBAC 權限管理系統 CLI 工具
+ * (c) CodeIgniter Foundation <admin@codeigniter.com>
+ *
+ * For the full copyright and license information, please view
+ * the LICENSE file that was distributed with this source code.
  */
 
-// 路徑設定
+/*
+ * --------------------------------------------------------------------
+ * CodeIgniter command-line tools
+ * --------------------------------------------------------------------
+ */
+
+// Refuse to run when called from php-cgi
+if (strpos(PHP_SAPI, 'cgi') === 0) {
+    exit("The cli tool is not supported when running php-cgi. It needs php-cli to function!\n\n");
+}
+
+// Path to the front controller (this file)
 define('FCPATH', __DIR__ . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR);
 
-// 載入 Composer autoloader
-require __DIR__ . '/vendor/autoload.php';
+// Ensure the current directory is pointing to the front controller's directory
+chdir(FCPATH);
 
-// 載入 CodeIgniter 核心
-require_once __DIR__ . '/app/Config/Paths.php';
+/*
+ *---------------------------------------------------------------
+ * BOOTSTRAP THE APPLICATION
+ *---------------------------------------------------------------
+ */
+
+// Load our paths config file
+$pathsConfig = FCPATH . '../app/Config/Paths.php';
+require realpath($pathsConfig) ?: $pathsConfig;
+
 $paths = new Config\Paths();
 
-// 啟動框架
-require __DIR__ . '/vendor/codeigniter4/framework/system/bootstrap.php';
+// Define the path to composer's autoload file.
+if (! defined('COMPOSER_PATH')) {
+    define('COMPOSER_PATH', realpath(FCPATH . '../vendor/autoload.php') ?: FCPATH . '../vendor/autoload.php');
+}
 
-// 執行 CLI
+// Define ENVIRONMENT early
+if (! defined('ENVIRONMENT')) {
+    define('ENVIRONMENT', $_SERVER['CI_ENVIRONMENT'] ?? 'development');
+}
+
+// Define CI_DEBUG for the logger
+if (! defined('CI_DEBUG')) {
+    define('CI_DEBUG', ENVIRONMENT !== 'production');
+}
+
+// Location of the framework bootstrap file.
+require rtrim($paths->systemDirectory, '\\/ ') . DIRECTORY_SEPARATOR . 'bootstrap.php';
+
+// Load environment settings from .env files into $_SERVER and $_ENV
+require_once SYSTEMPATH . 'Config/DotEnv.php';
+(new CodeIgniter\Config\DotEnv(ROOTPATH))->load();
+
+/*
+ * ------------------------------------------------------
+ *  Load up our current environment file
+ * ------------------------------------------------------
+ */
+require APPPATH . 'Config/Boot/' . ENVIRONMENT . '.php';
+
+/*
+ *---------------------------------------------------------------
+ * LAUNCH THE APPLICATION
+ *---------------------------------------------------------------
+ */
+
+// Grab our CodeIgniter instance
 $app = Config\Services::codeigniter();
 $app->initialize();
 $app->setContext('php-cli');
+
 $app->run();

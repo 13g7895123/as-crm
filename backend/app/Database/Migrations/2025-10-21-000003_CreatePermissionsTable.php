@@ -44,15 +44,15 @@ class CreatePermissionsTable extends Migration
                 'comment' => '權限描述',
             ],
             'created_at' => [
-                'type'    => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'    => false,
-                'default' => 'CURRENT_TIMESTAMP',
+                
                 'comment' => '建立時間',
             ],
             'updated_at' => [
-                'type'      => 'TIMESTAMP',
+                'type' => 'DATETIME',
                 'null'      => true,
-                'on_update' => 'CURRENT_TIMESTAMP',
+                
                 'comment'   => '更新時間',
             ],
         ]);

@@ -38,17 +38,23 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      * 需要 AuthFilter 驗證身份
      */
     $routes->group('roles', ['filter' => 'auth'], function ($routes) {
+        // Hierarchy routes (must be before (:num) routes)
+        $routes->get('hierarchy', 'RoleController::hierarchy', ['as' => 'api.roles.hierarchyTree']);
+
+        // Standard CRUD routes
         $routes->get('/', 'RoleController::index', ['as' => 'api.roles.index']);
         $routes->get('(:num)', 'RoleController::show/$1', ['as' => 'api.roles.show']);
         $routes->post('/', 'RoleController::create', ['as' => 'api.roles.create']);
         $routes->put('(:num)', 'RoleController::update/$1', ['as' => 'api.roles.update']);
         $routes->delete('(:num)', 'RoleController::delete/$1', ['as' => 'api.roles.delete']);
 
-        // 角色階層相關路由
-        $routes->get('(:num)/hierarchy', 'RoleController::hierarchy/$1', ['as' => 'api.roles.hierarchy']);
+        // Role hierarchy routes
+        $routes->get('(:num)/hierarchy', 'RoleController::roleHierarchy/$1', ['as' => 'api.roles.roleHierarchy']);
         $routes->put('(:num)/parent', 'RoleController::updateParent/$1', ['as' => 'api.roles.updateParent']);
+        $routes->post('(:num)/parents', 'RoleController::addParent/$1', ['as' => 'api.roles.addParent']);
+        $routes->delete('(:num)/parents/(:num)', 'RoleController::removeParent/$1/$2', ['as' => 'api.roles.removeParent']);
 
-        // 角色權限相關路由
+        // Role permissions routes
         $routes->get('(:num)/permissions', 'RoleController::permissions/$1', ['as' => 'api.roles.permissions']);
         $routes->post('(:num)/permissions', 'RoleController::assignPermissions/$1', ['as' => 'api.roles.assignPermissions']);
     });
@@ -68,17 +74,19 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      * 需要 AuthFilter 驗證身份
      */
     $routes->group('role-assignments', ['filter' => 'auth'], function ($routes) {
+        // 批次指派與即將過期查詢路由 (must be before (:num) routes)
+        $routes->post('bulk', 'RoleAssignmentController::bulk', ['as' => 'api.roleAssignments.bulk']);
+        $routes->get('expiring', 'RoleAssignmentController::expiring', ['as' => 'api.roleAssignments.expiring']);
+        $routes->post('check-authorization', 'RoleAssignmentController::checkAuthorization', ['as' => 'api.roleAssignments.checkAuthorization']);
+
+        // 標準 CRUD 路由
         $routes->get('/', 'RoleAssignmentController::index', ['as' => 'api.roleAssignments.index']);
         $routes->get('(:num)', 'RoleAssignmentController::show/$1', ['as' => 'api.roleAssignments.show']);
         $routes->post('/', 'RoleAssignmentController::create', ['as' => 'api.roleAssignments.create']);
-        $routes->put('(:num)', 'RoleAssignmentController::update/$1', ['as' => 'api.roleAssignments.update']);
-        $routes->delete('(:num)', 'RoleAssignmentController::revoke/$1', ['as' => 'api.roleAssignments.revoke']);
+        $routes->delete('(:num)', 'RoleAssignmentController::delete/$1', ['as' => 'api.roleAssignments.delete']);
 
         // 延長/縮短角色有效期限
         $routes->put('(:num)/extend', 'RoleAssignmentController::extend/$1', ['as' => 'api.roleAssignments.extend']);
-
-        // 查詢特定使用者的角色
-        $routes->get('user/(:num)', 'RoleAssignmentController::userRoles/$1', ['as' => 'api.roleAssignments.userRoles']);
     });
 
     /**
@@ -86,12 +94,21 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      * 需要 AuthFilter 驗證身份
      */
     $routes->group('audit-logs', ['filter' => 'auth'], function ($routes) {
-        $routes->get('/', 'AuditLogController::index', ['as' => 'api.auditLogs.index']);
-        $routes->get('(:num)', 'AuditLogController::show/$1', ['as' => 'api.auditLogs.show']);
+        // Special routes (must be before (:num) routes)
+        $routes->get('recent', 'AuditLogController::recent', ['as' => 'api.auditLogs.recent']);
+        $routes->get('statistics', 'AuditLogController::statistics', ['as' => 'api.auditLogs.statistics']);
+        $routes->get('summary', 'AuditLogController::summary', ['as' => 'api.auditLogs.summary']);
         $routes->post('export', 'AuditLogController::export', ['as' => 'api.auditLogs.export']);
 
-        // 查詢特定使用者的操作記錄
+        // Standard routes
+        $routes->get('/', 'AuditLogController::index', ['as' => 'api.auditLogs.index']);
+        $routes->get('(:num)', 'AuditLogController::show/$1', ['as' => 'api.auditLogs.show']);
+
+        // User logs
         $routes->get('user/(:num)', 'AuditLogController::userLogs/$1', ['as' => 'api.auditLogs.userLogs']);
+
+        // Resource audit trail
+        $routes->get('resource/(:segment)/(:num)', 'AuditLogController::resourceAuditTrail/$1/$2', ['as' => 'api.auditLogs.resourceAuditTrail']);
     });
 
     /**
@@ -100,7 +117,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      */
     $routes->group('users', ['filter' => 'auth'], function ($routes) {
         $routes->get('(:num)/permissions', 'UserPermissionController::permissions/$1', ['as' => 'api.users.permissions']);
-        $routes->get('(:num)/roles', 'UserPermissionController::roles/$1', ['as' => 'api.users.roles']);
+        $routes->get('(:num)/roles', 'RoleAssignmentController::userRoles/$1', ['as' => 'api.users.roles']);
         $routes->post('(:num)/check-permission', 'UserPermissionController::checkPermission/$1', ['as' => 'api.users.checkPermission']);
     });
 });
@@ -108,11 +125,12 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
 /**
  * 404 Override
  * 處理找不到的路由
+ * Note: Commented out temporarily - will be handled by error handler filter
  */
-$routes->set404Override(function () {
-    return response()->setJSON([
-        'status'  => 'error',
-        'message' => '找不到請求的資源',
-        'code'    => 404,
-    ])->setStatusCode(404);
-});
+// $routes->set404Override(function () {
+//     return response()->setJSON([
+//         'status'  => 'error',
+//         'message' => '找不到請求的資源',
+//         'code'    => 404,
+//     ])->setStatusCode(404);
+// });
