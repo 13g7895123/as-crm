@@ -32,7 +32,7 @@ class CorsFilter implements FilterInterface
         $origin = $request->getHeaderLine('Origin');
 
         // 處理 OPTIONS preflight 請求
-        if ($request->getMethod() === 'options') {
+        if (strtoupper($request->getMethod()) === 'OPTIONS') {
             $response = Services::response();
 
             // 設定 CORS headers

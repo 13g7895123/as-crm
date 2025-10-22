@@ -22,7 +22,11 @@
       "Bash(for:*)",
       "Bash(do echo \"=== Checking $task ===\")",
       "Bash(done)",
-      "Bash(do sed -i \"s/^- \\[ \\] T$tid/- [X] T$tid/\" tasks.md)"
+      "Bash(do sed -i \"s/^- \\[ \\] T$tid/- [X] T$tid/\" tasks.md)",
+      "Bash(npm run dev)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

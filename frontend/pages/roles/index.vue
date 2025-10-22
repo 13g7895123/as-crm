@@ -1,24 +1,17 @@
 <template>
-  <div class="roles-page">
-    <!-- Page header -->
-    <div class="mb-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">角色管理</h1>
-          <p class="mt-1 text-sm text-gray-500">管理系統角色和自訂角色的權限設定</p>
-        </div>
-        <NuxtLink
-          to="/roles/create"
-          data-testid="create-role-button"
-          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          建立角色
-        </NuxtLink>
-      </div>
-    </div>
+  <LayoutContentArea title="角色管理" subtitle="管理系統角色和自訂角色的權限設定">
+    <template #actions>
+      <NuxtLink
+        to="/roles/create"
+        data-testid="create-role-button"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      >
+        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        建立角色
+      </NuxtLink>
+    </template>
 
     <!-- Filters -->
     <div class="mb-6 bg-white rounded-lg shadow p-4">
@@ -276,7 +269,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </LayoutContentArea>
 </template>
 
 <script setup lang="ts">

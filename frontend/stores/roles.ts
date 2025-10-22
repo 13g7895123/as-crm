@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { Ref } from 'vue'
+import type { Permission } from './permissions'
 
 /**
  * Role interface matching backend API response
@@ -15,6 +16,7 @@ export interface Role {
   created_at: string
   updated_at?: string
   deleted_at?: string
+  parent_role_id?: number
   permissions?: Permission[]
   condition_rules?: ConditionRule[]
 }
@@ -31,14 +33,6 @@ export interface RoleInput {
   is_system?: boolean
   permissions?: number[]
   condition_rules?: ConditionRule[]
-}
-
-export interface Permission {
-  id: number
-  name: string
-  resource: string
-  action: string
-  description?: string
 }
 
 export interface ConditionRule {

@@ -15,7 +15,7 @@
  */
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  const { user, isAuthenticated } = useAuth()
+  const { currentUser, isAuthenticated } = useAuth()
   const { can, canAny } = usePermissions()
 
   // Check if user is authenticated
@@ -75,7 +75,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   // Role-based check (optional, for simple role checks)
   if (meta.roles && Array.isArray(meta.roles)) {
-    const userRoles = user.value?.roles || []
+    const userRoles = currentUser.value?.roles || []
     const hasRequiredRole = (meta.roles as string[]).some(role =>
       userRoles.some((r: any) => r.name === role || r === role)
     )
@@ -91,7 +91,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   // Admin only check
   if (meta.requireAdmin) {
-    const isAdmin = user.value?.roles?.some((r: any) =>
+    const isAdmin = currentUser.value?.roles?.some((r: any) =>
       r.name === 'system_admin' || r === 'system_admin'
     )
 

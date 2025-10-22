@@ -1,6 +1,5 @@
 <template>
-  <div class="my-permissions-page">
-    <LayoutContentArea title="我的權限" subtitle="檢視您當前擁有的所有角色和權限">
+  <LayoutContentArea title="我的權限" subtitle="檢視您當前擁有的所有角色和權限">
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-12">
         <div class="text-center">
@@ -25,8 +24,8 @@
               </div>
             </div>
             <div class="flex-1">
-              <h2 class="text-xl font-semibold text-gray-900">{{ user?.name || user?.username }}</h2>
-              <p class="text-sm text-gray-500">{{ user?.email }}</p>
+              <h2 class="text-xl font-semibold text-gray-900">{{ currentUser?.full_name || currentUser?.username }}</h2>
+              <p class="text-sm text-gray-500">{{ currentUser?.email }}</p>
               <div class="mt-2 flex items-center space-x-2">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   已啟用
@@ -160,8 +159,7 @@
           </div>
         </div>
       </div>
-    </LayoutContentArea>
-  </div>
+  </LayoutContentArea>
 </template>
 
 <script setup lang="ts">
@@ -174,7 +172,7 @@ definePageMeta({
   layout: 'default',
 })
 
-const { user } = useAuth()
+const { currentUser } = useAuth()
 const { getPermissions } = usePermissions()
 
 const loading = ref(true)
@@ -183,7 +181,7 @@ const roles = ref<any[]>([])
 const permissionsGrouped = ref<Record<string, string[]>>({})
 
 const userInitials = computed(() => {
-  const name = user.value?.name || user.value?.username || 'U'
+  const name = currentUser.value?.full_name || currentUser.value?.username || 'U'
   return name.substring(0, 2).toUpperCase()
 })
 
@@ -215,8 +213,8 @@ const loadPermissions = async () => {
     }, {})
 
     // Get user roles (mock data for now - replace with actual API call)
-    // In production: const response = await fetch(`/api/v1/users/${user.value.id}/roles`)
-    roles.value = user.value?.roles || []
+    // In production: const response = await fetch(`/api/v1/users/${currentUser.value.id}/roles`)
+    roles.value = currentUser.value?.roles || []
   } catch (err: any) {
     error.value = err.message || '載入權限資料失敗'
     console.error('Failed to load permissions:', err)
@@ -293,9 +291,3 @@ onMounted(() => {
   loadPermissions()
 })
 </script>
-
-<style scoped>
-.my-permissions-page {
-  @apply p-6;
-}
-</style>

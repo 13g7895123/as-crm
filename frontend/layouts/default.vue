@@ -11,7 +11,7 @@
       ]"
     >
       <!-- Navbar -->
-      <LayoutNavbar />
+      <LayoutNavbar :sidebar-collapsed="sidebarCollapsed" />
 
       <!-- Page Content -->
       <div class="content-wrapper mt-16 h-[calc(100vh-4rem)] overflow-y-auto">
@@ -47,7 +47,7 @@ onMounted(() => {
 
 <style scoped>
 .app-layout {
-  @apply bg-gray-50;
+  @apply bg-gray-100;
 }
 
 .main-content {
@@ -65,8 +65,8 @@ onMounted(() => {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .main-content {
-    /* On mobile, always use collapsed sidebar margin */
-    margin-left: 4rem !important;
+    /* On mobile, sidebar overlays so no margin needed */
+    margin-left: 0 !important;
   }
 }
 

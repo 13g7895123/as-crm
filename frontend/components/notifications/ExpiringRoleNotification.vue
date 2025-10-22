@@ -108,8 +108,8 @@ interface ExpiringRole {
   is_read: boolean
 }
 
-const { getUserRoles, extendRoleExpiry } = useRoleAssignments()
-const { user } = useAuth()
+const { getUserRoles } = useRoleAssignments()
+const { currentUser } = useAuth()
 
 const expiringRoles = ref<ExpiringRole[]>([])
 const dismissedRoles = ref<number[]>([])
@@ -118,10 +118,10 @@ const dismissedRoles = ref<number[]>([])
  * Load expiring roles for current user
  */
 const loadExpiringRoles = async () => {
-  if (!user.value?.id) return
+  if (!currentUser.value?.id) return
 
   try {
-    const roles = await getUserRoles(user.value.id)
+    const roles = await getUserRoles(currentUser.value.id)
 
     // Filter roles expiring within 7 days
     const now = new Date().getTime()
@@ -188,6 +188,7 @@ const formatDateTime = (dateString: string): string => {
 
 /**
  * Extend role expiry period
+ * TODO: Implement extendRoleExpiry in useRoleAssignments composable
  */
 const extendRole = async (role: ExpiringRole) => {
   try {
@@ -195,7 +196,9 @@ const extendRole = async (role: ExpiringRole) => {
     const currentExpiry = new Date(role.expires_at)
     const newExpiry = new Date(currentExpiry.getTime() + (30 * 24 * 60 * 60 * 1000))
 
-    await extendRoleExpiry(role.id, newExpiry.toISOString())
+    // TODO: Implement extendRoleExpiry API call
+    // await extendRoleExpiry(role.id, newExpiry.toISOString())
+    console.warn('extendRoleExpiry not yet implemented')
 
     // Reload roles
     await loadExpiringRoles()

@@ -21,6 +21,10 @@ class Cors extends BaseConfig
         'http://localhost:3000',      // Nuxt 開發環境
         'http://127.0.0.1:3000',      // Nuxt 開發環境 (alternative)
         'http://localhost:8080',      // 前端生產環境
+        'http://localhost:9330',      // Nuxt 開發環境 (custom port)
+        'http://127.0.0.1:9330',      // Nuxt 開發環境 (custom port, alternative)
+        'http://localhost:9230',      // 後端開發環境 (backend dev port)
+        'http://127.0.0.1:9230',      // 後端開發環境 (backend dev port, alternative)
         // 生產環境需要加入實際的網域名稱
         // 'https://crm.example.com',
     ];

@@ -1,39 +1,31 @@
 <template>
-  <div class="audit-logs-page">
-    <!-- Page Header -->
-    <div class="mb-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">審計記錄</h1>
-          <p class="mt-1 text-sm text-gray-500">查看系統操作記錄和活動追蹤</p>
-        </div>
+  <LayoutContentArea title="審計記錄" subtitle="查看系統操作記錄和活動追蹤">
+    <template #actions>
+      <div class="flex items-center gap-3">
+        <!-- Export Button -->
+        <button
+          type="button"
+          @click="showExportDialog = true"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          匯出
+        </button>
 
-        <div class="flex items-center gap-3">
-          <!-- Export Button -->
-          <button
-            type="button"
-            @click="showExportDialog = true"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            匯出
-          </button>
-
-          <!-- Statistics Link -->
-          <NuxtLink
-            to="/audit-logs/statistics"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        <!-- Statistics Link -->
+        <NuxtLink
+          to="/audit-logs/statistics"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             統計分析
           </NuxtLink>
-        </div>
       </div>
-    </div>
+    </template>
 
     <!-- Filters -->
     <AuditLogFiltersComponent
@@ -249,7 +241,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </LayoutContentArea>
 </template>
 
 <script setup lang="ts">

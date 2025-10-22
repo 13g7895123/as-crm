@@ -15,6 +15,7 @@ export interface User {
   department?: string
   region?: string
   is_active: boolean
+  roles?: Array<{ id: number; name: string; display_name?: string }>
 }
 
 export interface AuthState {
