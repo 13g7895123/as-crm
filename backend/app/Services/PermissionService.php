@@ -3,25 +3,31 @@
 namespace App\Services;
 
 use App\Models\PermissionModel;
+use App\Models\RoleModel;
 use App\Models\RolePermissionModel;
+use App\Models\RoleHierarchyModel;
 use App\Models\ConditionRuleModel;
 
 /**
  * Permission Service
  *
- * Handles business logic for permission management
- * including querying permissions and checking user permissions
+ * Handles business logic for permission management including querying permissions,
+ * checking user permissions, and supporting role hierarchy inheritance.
  */
 class PermissionService
 {
     protected PermissionModel $permissionModel;
+    protected RoleModel $roleModel;
     protected RolePermissionModel $rolePermissionModel;
+    protected RoleHierarchyModel $hierarchyModel;
     protected ConditionRuleModel $conditionRuleModel;
 
     public function __construct()
     {
         $this->permissionModel = new PermissionModel();
+        $this->roleModel = new RoleModel();
         $this->rolePermissionModel = new RolePermissionModel();
+        $this->hierarchyModel = new RoleHierarchyModel();
         $this->conditionRuleModel = new ConditionRuleModel();
     }
 
@@ -58,7 +64,7 @@ class PermissionService
     }
 
     /**
-     * Check if user has permission
+     * Check if user has permission (includes inherited permissions from role hierarchy)
      *
      * @param int $userId
      * @param string $permissionName
@@ -89,8 +95,22 @@ class PermissionService
 
         $roleIds = array_column($userRoles, 'role_id');
 
-        // Check if any role has the permission
+        // Collect all roles to check (including ancestors via inheritance)
+        $allRolesToCheck = [];
         foreach ($roleIds as $roleId) {
+            // Add the role itself
+            $allRolesToCheck[] = $roleId;
+
+            // Add all ancestor roles (inherited)
+            $ancestorIds = $this->hierarchyModel->getAncestors($roleId, false);
+            $allRolesToCheck = array_merge($allRolesToCheck, $ancestorIds);
+        }
+
+        // Remove duplicates
+        $allRolesToCheck = array_unique($allRolesToCheck);
+
+        // Check if any role (direct or inherited) has the permission
+        foreach ($allRolesToCheck as $roleId) {
             if ($this->rolePermissionModel->roleHasPermission($roleId, $permission['id'])) {
                 // Check condition rules
                 $rules = $this->conditionRuleModel->getRulesByPermission($permission['id']);
@@ -163,6 +183,7 @@ class PermissionService
         $permissionSources = []; // Track which role grants which permission
 
         foreach ($roleIds as $index => $roleId) {
+            // Get direct permissions for this role
             $rolePermissions = $this->rolePermissionModel->getPermissionsByRole($roleId);
 
             foreach ($rolePermissions as $permission) {
@@ -172,33 +193,48 @@ class PermissionService
                     $allPermissions[$permId] = $permission;
                     $permissionSources[$permId] = [
                         'source' => $userRoles[$index]['role_display_name'],
+                        'source_role_id' => $roleId,
                         'is_inherited' => false,
                     ];
                 }
             }
 
-            // Get inherited permissions if requested
+            // Get inherited permissions from all ancestor roles if requested
             if ($includeInherited) {
-                $parentRoles = $db->table('role_hierarchy')
-                    ->select('parent_role_id')
-                    ->where('child_role_id', $roleId)
-                    ->get()
-                    ->getResultArray();
+                // Use Closure Table to get all ancestors (not just direct parents)
+                $ancestorIds = $this->hierarchyModel->getAncestors($roleId, false);
 
-                foreach ($parentRoles as $parent) {
-                    $parentPermissions = $this->rolePermissionModel->getPermissionsByRole($parent['parent_role_id']);
+                if (!empty($ancestorIds)) {
+                    // Get roles data for ancestors
+                    $ancestorRoles = $this->roleModel->find($ancestorIds);
 
-                    foreach ($parentPermissions as $permission) {
-                        $permId = $permission['id'];
+                    // Ensure it's an array of roles
+                    if (!empty($ancestorRoles) && !isset($ancestorRoles[0])) {
+                        $ancestorRoles = [$ancestorRoles];
+                    }
 
-                        if (!isset($allPermissions[$permId])) {
-                            $allPermissions[$permId] = $permission;
+                    // Create a map of ancestor roles
+                    $ancestorRoleMap = [];
+                    foreach ($ancestorRoles as $ancestorRole) {
+                        $ancestorRoleMap[$ancestorRole['id']] = $ancestorRole;
+                    }
 
-                            $parentRole = $db->table('roles')->find($parent['parent_role_id']);
-                            $permissionSources[$permId] = [
-                                'source' => $parentRole['display_name'],
-                                'is_inherited' => true,
-                            ];
+                    // Get permissions from each ancestor role
+                    foreach ($ancestorIds as $ancestorId) {
+                        $ancestorPermissions = $this->rolePermissionModel->getPermissionsByRole($ancestorId);
+
+                        foreach ($ancestorPermissions as $permission) {
+                            $permId = $permission['id'];
+
+                            // Only add if not already granted by a closer role (max permission principle)
+                            if (!isset($allPermissions[$permId])) {
+                                $allPermissions[$permId] = $permission;
+                                $permissionSources[$permId] = [
+                                    'source' => $ancestorRoleMap[$ancestorId]['display_name'] ?? "Role #{$ancestorId}",
+                                    'source_role_id' => $ancestorId,
+                                    'is_inherited' => true,
+                                ];
+                            }
                         }
                     }
                 }

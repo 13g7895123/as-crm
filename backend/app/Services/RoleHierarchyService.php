@@ -3,22 +3,41 @@
 namespace App\Services;
 
 use App\Models\RoleModel;
+use App\Models\RoleHierarchyModel;
 use App\Models\AuditLogModel;
 
 /**
  * Role Hierarchy Service
  *
- * Manages role hierarchy relationships and permission inheritance.
+ * Manages role hierarchy relationships and permission inheritance using Closure Table pattern.
+ * Automatically clears permission cache when hierarchy changes to ensure inherited permissions
+ * are immediately reflected.
  */
 class RoleHierarchyService
 {
     protected RoleModel $roleModel;
+    protected RoleHierarchyModel $hierarchyModel;
     protected AuditLogModel $auditLogModel;
+    protected ?AuthorizationService $authService = null;
 
     public function __construct()
     {
         $this->roleModel = new RoleModel();
+        $this->hierarchyModel = new RoleHierarchyModel();
         $this->auditLogModel = new AuditLogModel();
+    }
+
+    /**
+     * Get AuthorizationService instance (lazy loading to avoid circular dependency)
+     *
+     * @return AuthorizationService
+     */
+    protected function getAuthService(): AuthorizationService
+    {
+        if ($this->authService === null) {
+            $this->authService = new AuthorizationService();
+        }
+        return $this->authService;
     }
 
     /**
@@ -45,53 +64,31 @@ class RoleHierarchyService
             throw new \InvalidArgumentException('父角色不存在');
         }
 
-        // Check for circular dependency
-        if ($this->roleModel->wouldCreateCircularDependency($childRoleId, $parentRoleId)) {
-            throw new \RuntimeException('無法新增父角色：會造成循環依賴');
-        }
-
-        // Check if relationship already exists
-        $db = \Config\Database::connect();
-        $existing = $db->table('role_hierarchy')
-            ->where('child_role_id', $childRoleId)
-            ->where('parent_role_id', $parentRoleId)
-            ->get()
-            ->getRowArray();
-
-        if ($existing) {
-            throw new \RuntimeException('父角色關係已存在');
-        }
-
-        // Create relationship
-        $db->transStart();
-
         try {
-            $db->table('role_hierarchy')->insert([
-                'parent_role_id' => $parentRoleId,
-                'child_role_id' => $childRoleId,
-                'created_at' => date('Y-m-d H:i:s'),
-            ]);
+            // Use Closure Table model to add parent
+            $this->hierarchyModel->addParent($childRoleId, $parentRoleId, $createdBy ?? 0);
+
+            // Clear permission cache for all users since hierarchy affects inherited permissions
+            $this->getAuthService()->clearAllPermissionCache();
 
             // Log the action
             $this->auditLogModel->insert([
                 'user_id' => $createdBy,
                 'action' => 'role_hierarchy_created',
-                'resource_type' => 'role_hierarchy',
-                'resource_id' => null,
-                'details' => json_encode([
+                'target_type' => 'role_hierarchy',
+                'target_id' => null,
+                'new_values' => json_encode([
                     'child_role_id' => $childRoleId,
                     'child_role_name' => $childRole['display_name'],
                     'parent_role_id' => $parentRoleId,
                     'parent_role_name' => $parentRole['display_name'],
                 ], JSON_UNESCAPED_UNICODE),
+                'result' => 'success',
                 'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             ]);
 
-            $db->transComplete();
-
-            return $db->transStatus() !== false;
+            return true;
         } catch (\Exception $e) {
-            $db->transRollback();
             throw $e;
         }
     }
@@ -107,51 +104,35 @@ class RoleHierarchyService
      */
     public function removeParent(int $childRoleId, int $parentRoleId, ?int $deletedBy = null): bool
     {
-        $db = \Config\Database::connect();
-
-        // Check if relationship exists
-        $existing = $db->table('role_hierarchy')
-            ->where('child_role_id', $childRoleId)
-            ->where('parent_role_id', $parentRoleId)
-            ->get()
-            ->getRowArray();
-
-        if (!$existing) {
-            throw new \RuntimeException('父角色關係不存在');
-        }
-
-        $db->transStart();
-
         try {
-            // Delete relationship
-            $db->table('role_hierarchy')
-                ->where('child_role_id', $childRoleId)
-                ->where('parent_role_id', $parentRoleId)
-                ->delete();
-
-            // Log the action
+            // Get role info before deletion for logging
             $childRole = $this->roleModel->find($childRoleId);
             $parentRole = $this->roleModel->find($parentRoleId);
 
+            // Use Closure Table model to remove parent
+            $this->hierarchyModel->removeParent($childRoleId, $parentRoleId);
+
+            // Clear permission cache for all users since hierarchy affects inherited permissions
+            $this->getAuthService()->clearAllPermissionCache();
+
+            // Log the action
             $this->auditLogModel->insert([
                 'user_id' => $deletedBy,
                 'action' => 'role_hierarchy_deleted',
-                'resource_type' => 'role_hierarchy',
-                'resource_id' => null,
-                'details' => json_encode([
+                'target_type' => 'role_hierarchy',
+                'target_id' => null,
+                'old_values' => json_encode([
                     'child_role_id' => $childRoleId,
                     'child_role_name' => $childRole['display_name'] ?? '',
                     'parent_role_id' => $parentRoleId,
                     'parent_role_name' => $parentRole['display_name'] ?? '',
                 ], JSON_UNESCAPED_UNICODE),
+                'result' => 'success',
                 'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
             ]);
 
-            $db->transComplete();
-
-            return $db->transStatus() !== false;
+            return true;
         } catch (\Exception $e) {
-            $db->transRollback();
             throw $e;
         }
     }
@@ -167,25 +148,34 @@ class RoleHierarchyService
      */
     public function setParent(int $childRoleId, ?int $parentRoleId, ?int $modifiedBy = null): bool
     {
-        $db = \Config\Database::connect();
-        $db->transStart();
-
         try {
-            // Remove all existing parents
-            $db->table('role_hierarchy')
-                ->where('child_role_id', $childRoleId)
-                ->delete();
+            // Use Closure Table model to set parent
+            $this->hierarchyModel->setParent($childRoleId, $parentRoleId, $modifiedBy ?? 0);
 
-            // Add new parent if provided
-            if ($parentRoleId !== null) {
-                $this->addParent($childRoleId, $parentRoleId, $modifiedBy);
-            }
+            // Clear permission cache for all users since hierarchy affects inherited permissions
+            $this->getAuthService()->clearAllPermissionCache();
 
-            $db->transComplete();
+            // Log the action
+            $childRole = $this->roleModel->find($childRoleId);
+            $parentRole = $parentRoleId ? $this->roleModel->find($parentRoleId) : null;
 
-            return $db->transStatus() !== false;
+            $this->auditLogModel->insert([
+                'user_id' => $modifiedBy,
+                'action' => 'role_hierarchy_updated',
+                'target_type' => 'role_hierarchy',
+                'target_id' => null,
+                'new_values' => json_encode([
+                    'child_role_id' => $childRoleId,
+                    'child_role_name' => $childRole['display_name'] ?? '',
+                    'parent_role_id' => $parentRoleId,
+                    'parent_role_name' => $parentRole['display_name'] ?? null,
+                ], JSON_UNESCAPED_UNICODE),
+                'result' => 'success',
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            ]);
+
+            return true;
         } catch (\Exception $e) {
-            $db->transRollback();
             throw $e;
         }
     }
@@ -197,7 +187,7 @@ class RoleHierarchyService
      */
     public function getHierarchyTree(): array
     {
-        return $this->roleModel->getHierarchyTree();
+        return $this->hierarchyModel->getHierarchyTree();
     }
 
     /**
@@ -208,19 +198,7 @@ class RoleHierarchyService
      */
     public function getRoleHierarchyInfo(int $roleId): array
     {
-        $role = $this->roleModel->find($roleId);
-
-        if (!$role) {
-            throw new \RuntimeException('角色不存在');
-        }
-
-        return [
-            'role' => $role,
-            'parents' => $this->roleModel->getParentRoles($roleId),
-            'children' => $this->roleModel->getChildRoles($roleId),
-            'ancestors' => $this->roleModel->getAncestorRoles($roleId),
-            'descendants' => $this->roleModel->getDescendantRoles($roleId),
-        ];
+        return $this->hierarchyModel->getRoleHierarchyInfo($roleId);
     }
 
     /**
@@ -361,7 +339,30 @@ class RoleHierarchyService
      */
     private function calculateRoleLevel(int $roleId): int
     {
-        $ancestors = $this->roleModel->getAncestorRoles($roleId);
+        $ancestors = $this->hierarchyModel->getAncestors($roleId);
         return count($ancestors);
+    }
+
+    /**
+     * Initialize role hierarchy for a new role
+     *
+     * @param int $roleId
+     * @param int $createdBy
+     * @return void
+     */
+    public function initializeRoleHierarchy(int $roleId, int $createdBy): void
+    {
+        $this->hierarchyModel->initializeRole($roleId, $createdBy);
+    }
+
+    /**
+     * Remove role from hierarchy (called when deleting role)
+     *
+     * @param int $roleId
+     * @return void
+     */
+    public function removeRoleFromHierarchy(int $roleId): void
+    {
+        $this->hierarchyModel->removeRole($roleId);
     }
 }

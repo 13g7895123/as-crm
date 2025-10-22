@@ -83,6 +83,16 @@
           <ConditionBuilder v-model="conditionRules" />
         </div>
       </div>
+
+      <!-- Role Hierarchy Section (not editable for system roles) -->
+      <div v-if="!role.is_system" class="mt-6">
+        <RoleHierarchyTree
+          :current-role-id="role.id"
+          :selected-parent-id="selectedParentRoleId"
+          :allow-no-parent="true"
+          @parent-selected="handleParentSelected"
+        />
+      </div>
     </template>
 
     <!-- Success notification -->
@@ -101,13 +111,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRoles } from '~/composables/useRoles'
 import type { Role, ConditionRule } from '~/stores/roles'
 import RoleForm from '~/components/roles/RoleForm.vue'
 import PermissionSelector from '~/components/roles/PermissionSelector.vue'
 import ConditionBuilder from '~/components/roles/ConditionBuilder.vue'
+import RoleHierarchyTree from '~/components/roles/RoleHierarchyTree.vue'
 
 definePageMeta({
   title: '編輯角色',
@@ -124,6 +135,7 @@ const initialLoading = ref(true)
 const loadError = ref<string | null>(null)
 const selectedPermissions = ref<number[]>([])
 const conditionRules = ref<ConditionRule[]>([])
+const selectedParentRoleId = ref<number | null>(null)
 const showSuccess = ref(false)
 
 /**
@@ -146,11 +158,39 @@ const loadRole = async () => {
     if (roleData.condition_rules) {
       conditionRules.value = roleData.condition_rules
     }
+
+    // Set parent role
+    if (roleData.parent_role_id) {
+      selectedParentRoleId.value = roleData.parent_role_id
+    }
   } catch (err) {
     console.error('Failed to load role:', err)
     loadError.value = (err as Error).message
   } finally {
     initialLoading.value = false
+  }
+}
+
+/**
+ * Handle parent role selection
+ */
+const handleParentSelected = async (parentRoleId: number | null) => {
+  selectedParentRoleId.value = parentRoleId
+
+  // Update parent role immediately via API
+  try {
+    await fetch(`/api/v1/roles/${roleId.value}/parent`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        parent_role_id: parentRoleId,
+      }),
+    })
+  } catch (err) {
+    console.error('Failed to update parent role:', err)
+    alert('更新父角色失敗')
   }
 }
 

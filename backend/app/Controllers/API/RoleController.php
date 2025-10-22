@@ -18,6 +18,22 @@ class RoleController extends BaseController
     protected RoleService $roleService;
     protected RoleHierarchyService $hierarchyService;
 
+    /**
+     * Permission filters for role management
+     * Requires 'role:view' for read operations and 'role:edit' for write operations
+     */
+    protected $filters = [
+        'permission' => [
+            'before' => [
+                'index'       => ['module' => 'role', 'action' => 'view'],
+                'show'        => ['module' => 'role', 'action' => 'view'],
+                'create'      => ['module' => 'role', 'action' => 'edit'],
+                'update'      => ['module' => 'role', 'action' => 'edit'],
+                'delete'      => ['module' => 'role', 'action' => 'edit'],
+            ],
+        ],
+    ];
+
     public function __construct()
     {
         $this->roleService = new RoleService();

@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(dir:*)",
+      "Bash(if not exist .env copy .env.example .env)",
+      "Bash(if [ ! -f .env ])",
+      "Bash(then cp .env.example .env)",
+      "Bash(fi)",
+      "Bash(if [ -f .gitignore ])",
+      "Bash(then echo \"exists\")",
+      "Bash(else echo \"not exists\")",
+      "Bash(chmod:*)",
+      "Bash(tree:*)",
+      "Bash(docker compose:*)",
+      "Bash(timeout 120 docker compose logs --tail 20)",
+      "Bash(timeout 30 docker compose ps)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(if [ -d \"C:/Jarvis/17_idea/20_as/01_crm/specs/001-rbac-permission-management/checklists\" ])",
+      "Bash(mkdir:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== Checking $task ===\")",
+      "Bash(done)",
+      "Bash(do sed -i \"s/^- \\[ \\] T$tid/- [X] T$tid/\" tasks.md)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

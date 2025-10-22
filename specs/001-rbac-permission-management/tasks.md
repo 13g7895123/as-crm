@@ -65,10 +65,10 @@
 - [X] T031 [P] 建立 frontend/composables/useAuth.ts（身份驗證 composable,提供 login/logout/getToken 方法）
 - [X] T032 [P] 建立 backend/app/Libraries/JWT.php（JWT token 生成和驗證 library）
 - [X] T033 建立 backend/app/Controllers/API/AuthController.php（login/logout/refresh token endpoints）
-- [ ] T034 [P] 建立 frontend/layouts/default.vue（主要布局:側邊欄+導覽列+內容區域三區塊結構,符合 FR-033）
-- [ ] T035 [P] 建立 frontend/components/layout/Sidebar.vue（側邊欄元件:淺灰/白色背景,深色文字,權限動態選單,符合 FR-034）
-- [ ] T036 [P] 建立 frontend/components/layout/Navbar.vue（導覽列元件:白色背景,深色文字/圖示,60-64px 高度,符合 FR-035）
-- [ ] T037 [P] 建立 frontend/components/layout/ContentArea.vue（內容區域容器:白色/淺灰背景,卡片式設計,符合 FR-036）
+- [X] T034 [P] 建立 frontend/layouts/default.vue（主要布局:側邊欄+導覽列+內容區域三區塊結構,符合 FR-033）
+- [X] T035 [P] 建立 frontend/components/layout/Sidebar.vue（側邊欄元件:淺灰/白色背景,深色文字,權限動態選單,符合 FR-034）
+- [X] T036 [P] 建立 frontend/components/layout/Navbar.vue（導覽列元件:白色背景,深色文字/圖示,60-64px 高度,符合 FR-035）
+- [X] T037 [P] 建立 frontend/components/layout/ContentArea.vue（內容區域容器:白色/淺灰背景,卡片式設計,符合 FR-036）
 
 **Checkpoint**: 基礎設施就緒 - 使用者故事實作現在可以平行開始
 
@@ -126,27 +126,27 @@
 
 ### Implementation for User Story 2
 
-- [ ] T064 [P] [US2] 建立 backend/app/Models/RoleAssignmentModel.php（角色指派模型,含時間性授權驗證）
-- [ ] T065 [US2] 建立 backend/app/Services/RoleAssignmentService.php（角色指派業務邏輯,依賴 T064）
-- [ ] T066 [US2] 建立 backend/app/Controllers/API/RoleAssignmentController.php（Role Assignments API endpoints: POST/DELETE /role-assignments, GET /users/{userId}/roles,依賴 T065）
-- [ ] T067 [US2] 實作時間性授權檢查邏輯（在 RoleAssignmentService 中驗證 valid_from < valid_until）
-- [ ] T068 [US2] 建立排程任務清理過期角色指派（backend/app/Commands/CleanExpiredRolesCommand.php,每 5 分鐘執行以符合 SC-008 要求）
-- [ ] T069 [US2] 建立過期前通知機制（backend/app/Commands/NotifyExpiringRolesCommand.php,檢查 7天/3天/1天前即將過期的角色）
-- [ ] T070 [P] [US2] 建立 frontend/pages/teams/manage.vue（團隊成員權限管理頁面,顯示成員清單及當前角色,使用 default.vue 布局）
-- [ ] T071 [P] [US2] 建立 frontend/components/teams/MemberPermissionEditor.vue（成員權限編輯器元件,支援指派角色和設定有效期限）
-- [ ] T072 [US2] 建立 frontend/composables/useRoleAssignments.ts（角色指派 composable,提供 assignRole/revokeRole/getUserRoles 方法）
-- [ ] T073 [US2] 在 frontend/pages/teams/manage.vue 中整合 MemberPermissionEditor（依賴 T070-T072）
+- [X] T064 [P] [US2] 建立 backend/app/Models/RoleAssignmentModel.php（角色指派模型,含時間性授權驗證）
+- [X] T065 [US2] 建立 backend/app/Services/RoleAssignmentService.php（角色指派業務邏輯,依賴 T064）
+- [X] T066 [US2] 建立 backend/app/Controllers/API/RoleAssignmentController.php（Role Assignments API endpoints: POST/DELETE /role-assignments, GET /users/{userId}/roles,依賴 T065）
+- [X] T067 [US2] 實作時間性授權檢查邏輯（在 RoleAssignmentService 中驗證 valid_from < valid_until）
+- [X] T068 [US2] 建立排程任務清理過期角色指派（backend/app/Commands/CleanExpiredRolesCommand.php,每 5 分鐘執行以符合 SC-008 要求）
+- [X] T069 [US2] 建立過期前通知機制（backend/app/Commands/NotifyExpiringRolesCommand.php,檢查 7天/3天/1天前即將過期的角色）
+- [X] T070 [P] [US2] 建立 frontend/pages/teams/manage.vue（團隊成員權限管理頁面,顯示成員清單及當前角色,使用 default.vue 布局）
+- [X] T071 [P] [US2] 建立 frontend/components/teams/MemberPermissionEditor.vue（成員權限編輯器元件,支援指派角色和設定有效期限）
+- [X] T072 [US2] 建立 frontend/composables/useRoleAssignments.ts（角色指派 composable,提供 assignRole/revokeRole/getUserRoles 方法）
+- [X] T073 [US2] 在 frontend/pages/teams/manage.vue 中整合 MemberPermissionEditor（依賴 T070-T072）
 
 ### Additional Features for User Story 2
 
-- [ ] T074 [US2] 在 RoleAssignmentController 中實作延長/縮短角色有效期限功能（PUT /role-assignments/{id}/extend endpoint,支援 FR-013）
-- [ ] T075 [P] [US2] 建立 frontend/components/notifications/ExpiringRoleNotification.vue（過期通知元件,顯示即將過期的角色,整合至 Navbar.vue）
-- [ ] T076 [US2] 在 MemberPermissionEditor.vue 中新增延長/縮短期限 UI（依賴 T074）
-- [ ] T077 [US2] 在 frontend/layouts/default.vue 中整合 ExpiringRoleNotification 到 Navbar（依賴 T075）
+- [X] T074 [US2] 在 RoleAssignmentController 中實作延長/縮短角色有效期限功能（PUT /role-assignments/{id}/extend endpoint,支援 FR-013）
+- [X] T075 [P] [US2] 建立 frontend/components/notifications/ExpiringRoleNotification.vue（過期通知元件,顯示即將過期的角色,整合至 Navbar.vue）
+- [X] T076 [US2] 在 MemberPermissionEditor.vue 中新增延長/縮短期限 UI（依賴 T074）
+- [X] T077 [US2] 在 frontend/layouts/default.vue 中整合 ExpiringRoleNotification 到 Navbar（依賴 T075）
 
 ### Tests for User Story 2
 
-- [ ] T078 [P] [US2] 建立 backend/tests/integration/RoleAssignmentAPITest.php（測試角色指派、時間性授權、延長期限的完整流程）
+- [X] T078 [P] [US2] 建立 backend/tests/integration/RoleAssignmentAPITest.php（測試角色指派、時間性授權、延長期限的完整流程）
 
 **Checkpoint**: 此時 User Stories 1 和 2 應該都能獨立運作
 
@@ -160,19 +160,19 @@
 
 ### Implementation for User Story 3
 
-- [ ] T079 [P] [US3] 建立 backend/app/Libraries/PermissionChecker.php（權限檢查工具類別,含條件限制驗證）
-- [ ] T080 [US3] 建立 backend/app/Services/AuthorizationService.php（權限驗證核心邏輯,合併多角色權限,依賴 T079）
-- [ ] T081 [US3] 建立 backend/app/Filters/PermissionFilter.php（權限檢查 filter,在請求進入 controller 前驗證,依賴 T080）
-- [ ] T082 [US3] 在 RoleController 中整合 PermissionFilter（設定所需權限: role:view, role:edit）
-- [ ] T083 [US3] 建立 backend/app/Services/AuditService.php（審計記錄服務,記錄操作到 audit_logs 表）
-- [ ] T084 [US3] 在所有 API Controllers 中整合 AuditService（記錄成功/失敗/拒絕的操作,依賴 T083）
-- [ ] T085 [US3] 實作條件限制動態查詢生成（在 AuthorizationService 中解析 JSON 條件並生成 SQL WHERE 子句）
-- [ ] T086 [US3] 實作權限快取機制（使用者登入時載入權限到 session,TTL 30分鐘,權限變更時清除）
-- [ ] T087 [P] [US3] 建立 frontend/composables/usePermissions.ts 中的 can() 方法（檢查使用者是否有特定權限）
-- [ ] T088 [P] [US3] 建立 frontend/middleware/permission.ts（路由中介軟體,保護需要權限的頁面）
-- [ ] T089 [US3] 在 frontend UI 元件中整合權限控制（隱藏/禁用無權限的按鈕,使用 v-if="can('permission')",符合 FR-038）
-- [ ] T090 [US3] 建立 frontend/pages/permissions/my-permissions.vue（我的權限頁面,顯示使用者當前所有角色和權限,使用 default.vue 布局）
-- [ ] T091 [US3] 實作權限變更後即時生效機制（後端權限變更時清除相關使用者的 session cache）
+- [X] T079 [P] [US3] 建立 backend/app/Libraries/PermissionChecker.php（權限檢查工具類別,含條件限制驗證）
+- [X] T080 [US3] 建立 backend/app/Services/AuthorizationService.php（權限驗證核心邏輯,合併多角色權限,依賴 T079）
+- [X] T081 [US3] 建立 backend/app/Filters/PermissionFilter.php（權限檢查 filter,在請求進入 controller 前驗證,依賴 T080）
+- [X] T082 [US3] 在 RoleController 中整合 PermissionFilter（設定所需權限: role:view, role:edit）
+- [X] T083 [US3] 建立 backend/app/Services/AuditService.php（審計記錄服務,記錄操作到 audit_logs 表）
+- [X] T084 [US3] 在所有 API Controllers 中整合 AuditService（記錄成功/失敗/拒絕的操作,依賴 T083）
+- [X] T085 [US3] 實作條件限制動態查詢生成（在 AuthorizationService 中解析 JSON 條件並生成 SQL WHERE 子句）
+- [X] T086 [US3] 實作權限快取機制（使用者登入時載入權限到 session,TTL 30分鐘,權限變更時清除）
+- [X] T087 [P] [US3] 建立 frontend/composables/usePermissions.ts 中的 can() 方法（檢查使用者是否有特定權限）
+- [X] T088 [P] [US3] 建立 frontend/middleware/permission.ts（路由中介軟體,保護需要權限的頁面）
+- [X] T089 [US3] 在 frontend UI 元件中整合權限控制（隱藏/禁用無權限的按鈕,使用 v-if="can('permission')",符合 FR-038）
+- [X] T090 [US3] 建立 frontend/pages/permissions/my-permissions.vue（我的權限頁面,顯示使用者當前所有角色和權限,使用 default.vue 布局）
+- [X] T091 [US3] 實作權限變更後即時生效機制（後端權限變更時清除相關使用者的 session cache）
 
 **Checkpoint**: 此時所有 P1 和 P2 使用者故事應該獨立運作
 
@@ -186,15 +186,15 @@
 
 ### Implementation for User Story 4
 
-- [ ] T092 [P] [US4] 建立 backend/app/Models/AuditLogModel.php（審計記錄模型,含分割表查詢邏輯）
-- [ ] T093 [US4] 建立 backend/app/Services/AuditLogService.php（審計記錄查詢服務,支援多條件篩選,依賴 T092）
-- [ ] T094 [US4] 建立 backend/app/Controllers/API/AuditLogController.php（Audit Logs API endpoints: GET /audit-logs, POST /audit-logs/export,依賴 T093）
-- [ ] T095 [US4] 實作審計記錄匯出功能（在 AuditLogService 中產生 CSV/Excel 報表）
-- [ ] T096 [US4] 實作審計記錄歸檔機制（backend/app/Commands/ArchiveAuditLogsCommand.php,90天後移至 audit_logs_archive 表）
-- [ ] T097 [P] [US4] 建立 frontend/pages/audit/logs.vue（審計記錄查詢頁面,含多條件篩選表單,使用 default.vue 布局）
-- [ ] T098 [P] [US4] 建立 frontend/components/audit/AuditLogTable.vue（審計記錄表格元件,顯示操作詳情和修改前後值）
-- [ ] T099 [US4] 建立 frontend/composables/useAuditLogs.ts（審計記錄 composable,提供 getAuditLogs/exportAuditLogs 方法）
-- [ ] T100 [US4] 在 frontend/pages/audit/logs.vue 中整合 AuditLogTable 和匯出功能（依賴 T097-T099）
+- [X] T092 [P] [US4] 建立 backend/app/Models/AuditLogModel.php（審計記錄模型,含分割表查詢邏輯）
+- [X] T093 [US4] 建立 backend/app/Services/AuditLogService.php（審計記錄查詢服務,支援多條件篩選,依賴 T092）
+- [X] T094 [US4] 建立 backend/app/Controllers/API/AuditLogController.php（Audit Logs API endpoints: GET /audit-logs, POST /audit-logs/export,依賴 T093）
+- [X] T095 [US4] 實作審計記錄匯出功能（在 AuditLogService 中產生 CSV/Excel 報表）
+- [X] T096 [US4] 實作審計記錄歸檔機制（backend/app/Commands/ArchiveAuditLogsCommand.php,90天後移至 audit_logs_archive 表）
+- [X] T097 [P] [US4] 建立 frontend/pages/audit/logs.vue（審計記錄查詢頁面,含多條件篩選表單,使用 default.vue 布局）
+- [X] T098 [P] [US4] 建立 frontend/components/audit/AuditLogTable.vue（審計記錄表格元件,顯示操作詳情和修改前後值）
+- [X] T099 [US4] 建立 frontend/composables/useAuditLogs.ts（審計記錄 composable,提供 getAuditLogs/exportAuditLogs 方法）
+- [X] T100 [US4] 在 frontend/pages/audit/logs.vue 中整合 AuditLogTable 和匯出功能（依賴 T097-T099）
 
 **Checkpoint**: 審計記錄功能完整可用
 
@@ -208,14 +208,14 @@
 
 ### Implementation for User Story 5
 
-- [ ] T101 [P] [US5] 建立 backend/app/Models/RoleHierarchyModel.php（角色階層 Closure Table 模型）
-- [ ] T102 [US5] 在 RoleService 中實作角色階層管理（建立/更新/刪除階層關係,維護 Closure Table,依賴 T101）
-- [ ] T103 [US5] 更新 PermissionService 查詢邏輯以包含繼承權限（使用 Closure Table JOIN 查詢所有繼承權限）
-- [ ] T104 [US5] 實作角色階層變更時的權限同步機制（父角色權限變更時自動更新所有子角色的繼承權限,符合 SC-010）
-- [ ] T105 [US5] 在 RoleController 中新增階層相關 endpoints（GET /roles/{id}/hierarchy, PUT /roles/{id}/parent）
-- [ ] T106 [P] [US5] 建立 frontend/components/roles/RoleHierarchyTree.vue（角色階層樹狀結構元件,視覺化顯示繼承關係）
-- [ ] T107 [US5] 在 frontend/pages/roles/[id]/edit.vue 中整合 RoleHierarchyTree（允許設定父角色,依賴 T106）
-- [ ] T108 [US5] 更新 frontend/components/roles/PermissionSelector.vue 以顯示繼承的權限（區分直接權限和繼承權限）
+- [X] T101 [P] [US5] 建立 backend/app/Models/RoleHierarchyModel.php（角色階層 Closure Table 模型）
+- [X] T102 [US5] 在 RoleService 中實作角色階層管理（建立/更新/刪除階層關係,維護 Closure Table,依賴 T101）
+- [X] T103 [US5] 更新 PermissionService 查詢邏輯以包含繼承權限（使用 Closure Table JOIN 查詢所有繼承權限）
+- [X] T104 [US5] 實作角色階層變更時的權限同步機制（父角色權限變更時自動更新所有子角色的繼承權限,符合 SC-010）
+- [X] T105 [US5] 在 RoleController 中新增階層相關 endpoints（GET /roles/{id}/hierarchy, PUT /roles/{id}/parent）
+- [X] T106 [P] [US5] 建立 frontend/components/roles/RoleHierarchyTree.vue（角色階層樹狀結構元件,視覺化顯示繼承關係）
+- [X] T107 [US5] 在 frontend/pages/roles/[id]/edit.vue 中整合 RoleHierarchyTree（允許設定父角色,依賴 T106）
+- [X] T108 [US5] 更新 frontend/components/roles/PermissionSelector.vue 以顯示繼承的權限（區分直接權限和繼承權限）
 
 **Checkpoint**: 角色階層功能完整實作
 
