@@ -17,6 +17,15 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 
 /**
+ * CORS Preflight Routes
+ * Handle OPTIONS requests for CORS
+ */
+$routes->options('(:any)', function () {
+    // Empty response, CORS headers will be added by CorsFilter
+    return response()->setStatusCode(204);
+});
+
+/**
  * API v1 Routes
  *
  * 所有 API 路由使用 /api/v1 前綴
@@ -120,7 +129,27 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
         $routes->get('(:num)/roles', 'RoleAssignmentController::userRoles/$1', ['as' => 'api.users.roles']);
         $routes->post('(:num)/check-permission', 'UserPermissionController::checkPermission/$1', ['as' => 'api.users.checkPermission']);
     });
+
+    /**
+     * CORS 除錯路由 (CORS Debug)
+     * 用於診斷和測試 CORS 設定
+     * 不需要認證，方便除錯
+     */
+    $routes->group('cors', function ($routes) {
+        $routes->get('debug', 'CorsDebugController::index', ['as' => 'api.cors.debug']);
+        $routes->post('test', 'CorsDebugController::test', ['as' => 'api.cors.test']);
+        $routes->get('health', 'CorsDebugController::health', ['as' => 'api.cors.health']);
+    });
 });
+
+/**
+ * Swagger API Documentation Routes
+ * Provides interactive API documentation using Swagger UI
+ */
+$routes->get('swagger', 'SwaggerController::index', ['as' => 'swagger.ui']);
+$routes->get('swagger/spec', 'SwaggerController::openapi', ['as' => 'swagger.spec']);
+$routes->get('swagger/spec/json', 'SwaggerController::openapiJson', ['as' => 'swagger.spec.json']);
+$routes->get('swagger/diag', 'SwaggerDiagController::index', ['as' => 'swagger.diag']);
 
 /**
  * 404 Override

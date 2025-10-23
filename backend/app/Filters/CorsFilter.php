@@ -55,7 +55,7 @@ class CorsFilter implements FilterInterface
      * @param ResponseInterface $response
      * @param array|null        $arguments
      *
-     * @return void
+     * @return ResponseInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
@@ -69,5 +69,8 @@ class CorsFilter implements FilterInterface
         foreach ($corsConfig->getHeaders($origin) as $header => $value) {
             $response->setHeader($header, $value);
         }
+
+        // Must return the response
+        return $response;
     }
 }

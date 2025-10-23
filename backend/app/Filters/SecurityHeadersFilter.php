@@ -51,6 +51,13 @@ class SecurityHeadersFilter implements FilterInterface
         // Get environment
         $environment = getenv('CI_ENVIRONMENT') ?: 'production';
 
+        // Get request URI
+        $uri = $request->getUri();
+        $path = $uri->getPath();
+
+        // Check if this is a Swagger UI request
+        $isSwaggerUI = strpos($path, '/swagger') === 0;
+
         // X-Content-Type-Options
         // Prevents browsers from MIME-sniffing a response away from the declared content-type
         $response->setHeader('X-Content-Type-Options', 'nosniff');
@@ -72,7 +79,7 @@ class SecurityHeadersFilter implements FilterInterface
 
         // Content-Security-Policy (CSP)
         // Controls which resources the browser is allowed to load
-        $csp = $this->getContentSecurityPolicy($environment);
+        $csp = $this->getContentSecurityPolicy($environment, $isSwaggerUI);
         $response->setHeader('Content-Security-Policy', $csp);
 
         // Referrer-Policy
@@ -98,10 +105,26 @@ class SecurityHeadersFilter implements FilterInterface
      * Get Content Security Policy string
      *
      * @param string $environment
+     * @param bool $isSwaggerUI Whether this is a Swagger UI request
      * @return string
      */
-    private function getContentSecurityPolicy(string $environment): string
+    private function getContentSecurityPolicy(string $environment, bool $isSwaggerUI = false): string
     {
+        // Special CSP for Swagger UI - needs to load external resources
+        if ($isSwaggerUI) {
+            return implode('; ', [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline' https://unpkg.com",
+                "style-src 'self' 'unsafe-inline' https://unpkg.com",
+                "img-src 'self' data: https://unpkg.com",
+                "font-src 'self' https://unpkg.com",
+                "connect-src 'self'",
+                "frame-ancestors 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+            ]);
+        }
+
         // Default CSP for API (very restrictive)
         $directives = [
             "default-src 'self'",
@@ -117,8 +140,10 @@ class SecurityHeadersFilter implements FilterInterface
 
         // In development, allow unsafe-inline for easier debugging
         if ($environment === 'development') {
-            $directives[] = "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
-            $directives[] = "style-src 'self' 'unsafe-inline'";
+            // Note: These will be overridden by more specific directives above
+            // but kept for documentation purposes
+            $directives[1] = "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+            $directives[2] = "style-src 'self' 'unsafe-inline'";
         }
 
         return implode('; ', $directives);
@@ -132,6 +157,7 @@ class SecurityHeadersFilter implements FilterInterface
     private function getPermissionsPolicy(): string
     {
         // Disable most browser features by default
+        // Note: 'ambient-light-sensor' is not recognized in all browsers
         $policies = [
             'geolocation=()',          // Disable geolocation
             'microphone=()',           // Disable microphone
@@ -141,7 +167,7 @@ class SecurityHeadersFilter implements FilterInterface
             'magnetometer=()',         // Disable magnetometer
             'gyroscope=()',            // Disable gyroscope
             'accelerometer=()',        // Disable accelerometer
-            'ambient-light-sensor=()', // Disable ambient light sensor
+            // 'ambient-light-sensor=()', // Removed - not recognized in all browsers
             'autoplay=()',             // Disable autoplay
             'encrypted-media=()',      // Disable encrypted media
             'picture-in-picture=()',   // Disable picture-in-picture

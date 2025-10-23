@@ -18,7 +18,9 @@ class Cors extends BaseConfig
      * @var array
      */
     public array $allowedOrigins = [
+        'http://localhost:3003',      // Nuxt 開發環境
         'http://localhost:3000',      // Nuxt 開發環境
+        'http://127.0.0.1:3003',      // Nuxt 開發環境 (alternative)
         'http://127.0.0.1:3000',      // Nuxt 開發環境 (alternative)
         'http://localhost:8080',      // 前端生產環境
         'http://localhost:9330',      // Nuxt 開發環境 (custom port)

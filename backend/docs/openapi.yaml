@@ -18,8 +18,10 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
+  - url: http://localhost:9230/api/v1
+    description: Development server (Docker)
   - url: http://localhost:8080/api/v1
-    description: Development server
+    description: Development server (Local)
   - url: https://staging-api.example.com/api/v1
     description: Staging server
   - url: https://api.example.com/api/v1
@@ -38,6 +40,8 @@ tags:
     description: Audit trail and activity logging
   - name: User Permissions
     description: User permission queries and authorization checks
+  - name: CORS Debug
+    description: CORS configuration debugging and testing tools
 
 security:
   - BearerAuth: []
@@ -85,15 +89,22 @@ paths:
                   data:
                     type: object
                     properties:
-                      token:
+                      access_token:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        description: JWT access token for authentication
                       refresh_token:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        description: Token used to refresh the access token
+                      token_type:
+                        type: string
+                        example: Bearer
+                        description: Type of token (always Bearer)
                       expires_in:
                         type: integer
                         example: 3600
+                        description: Access token lifetime in seconds
                       user:
                         $ref: '#/components/schemas/User'
         '401':
@@ -143,10 +154,21 @@ paths:
               schema:
                 type: object
                 properties:
-                  token:
+                  status:
                     type: string
-                  expires_in:
-                    type: integer
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                        description: New JWT access token
+                      token_type:
+                        type: string
+                        example: Bearer
+                      expires_in:
+                        type: integer
+                        description: Token lifetime in seconds
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -182,6 +204,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/Order'
         - name: is_system
           in: query
           description: Filter by system role flag
@@ -473,26 +497,14 @@ paths:
             schema:
               type: object
               required:
-                - permissions
+                - permission_ids
               properties:
-                permissions:
+                permission_ids:
                   type: array
                   items:
-                    type: object
-                    required:
-                      - permission_id
-                    properties:
-                      permission_id:
-                        type: integer
-                      scope_type:
-                        type: string
-                        nullable: true
-                      scope_id:
-                        type: integer
-                        nullable: true
-                      conditions:
-                        type: object
-                        nullable: true
+                    type: integer
+                  description: Array of permission IDs to assign to the role
+                  example: [1, 2, 3]
       responses:
         '200':
           description: Permissions assigned successfully
@@ -599,6 +611,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/Order'
         - name: user_id
           in: query
           description: Filter by user ID
@@ -609,12 +623,17 @@ paths:
           description: Filter by role ID
           schema:
             type: integer
-        - name: status
+        - name: include_expired
           in: query
-          description: Filter by status
+          description: Include expired role assignments
           schema:
-            type: string
-            enum: [active, expired, revoked]
+            type: boolean
+            default: true
+        - name: expiring_days
+          in: query
+          description: Filter assignments expiring within N days
+          schema:
+            type: integer
       responses:
         '200':
           description: Assignments retrieved successfully
@@ -717,13 +736,12 @@ paths:
             schema:
               type: object
               required:
-                - new_valid_until
+                - expires_at
               properties:
-                new_valid_until:
+                expires_at:
                   type: string
                   format: date-time
-                reason:
-                  type: string
+                  description: New expiration date for the role assignment
       responses:
         '200':
           description: Assignment extended successfully
@@ -862,32 +880,45 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PerPage'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/Order'
         - name: user_id
           in: query
-          schema:
-            type: integer
-        - name: entity_type
-          in: query
-          schema:
-            type: string
-        - name: entity_id
-          in: query
+          description: Filter by user ID
           schema:
             type: integer
         - name: action
           in: query
+          description: Filter by action type
           schema:
             type: string
+        - name: resource_type
+          in: query
+          description: Filter by resource type
+          schema:
+            type: string
+        - name: resource_id
+          in: query
+          description: Filter by resource ID
+          schema:
+            type: integer
         - name: start_date
           in: query
+          description: Filter logs from this date (YYYY-MM-DD HH:MM:SS)
           schema:
             type: string
             format: date-time
         - name: end_date
           in: query
+          description: Filter logs until this date (YYYY-MM-DD HH:MM:SS)
           schema:
             type: string
             format: date-time
+        - name: search
+          in: query
+          description: Search in log details
+          schema:
+            type: string
       responses:
         '200':
           description: Audit logs retrieved successfully
@@ -1208,6 +1239,148 @@ paths:
                       source:
                         type: string
 
+  # ============================================================================
+  # CORS Debug Endpoints
+  # ============================================================================
+
+  /cors/debug:
+    get:
+      tags:
+        - CORS Debug
+      summary: Display CORS configuration
+      description: Get detailed information about current CORS configuration and request headers for debugging
+      security: []
+      responses:
+        '200':
+          description: CORS configuration retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cors_enabled:
+                    type: boolean
+                    description: Whether CORS is enabled
+                  cors_filter_registered:
+                    type: boolean
+                    description: Whether CorsFilter is registered
+                  allowed_origins:
+                    type: array
+                    items:
+                      type: string
+                    description: List of allowed origins
+                  allowed_methods:
+                    type: array
+                    items:
+                      type: string
+                    description: List of allowed HTTP methods
+                  allowed_headers:
+                    type: array
+                    items:
+                      type: string
+                    description: List of allowed headers
+                  exposed_headers:
+                    type: array
+                    items:
+                      type: string
+                    description: List of exposed headers
+                  max_age:
+                    type: integer
+                    description: Preflight cache duration in seconds
+                  supports_credentials:
+                    type: boolean
+                    description: Whether credentials are supported
+                  request_info:
+                    type: object
+                    properties:
+                      origin:
+                        type: string
+                      method:
+                        type: string
+                      headers:
+                        type: object
+                      user_agent:
+                        type: string
+                  recommendations:
+                    type: array
+                    items:
+                      type: string
+                    description: Configuration recommendations
+
+  /cors/test:
+    post:
+      tags:
+        - CORS Debug
+      summary: Test CORS settings
+      description: Test CORS configuration for a specific origin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - origin
+              properties:
+                origin:
+                  type: string
+                  example: http://localhost:3000
+                  description: Origin to test against CORS rules
+      responses:
+        '200':
+          description: CORS test result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  origin:
+                    type: string
+                  allowed:
+                    type: boolean
+                    description: Whether the origin is allowed
+                  matched_rule:
+                    type: string
+                    nullable: true
+                    description: Which rule matched (if any)
+                  cors_headers:
+                    type: object
+                    description: CORS headers that would be returned
+                  message:
+                    type: string
+
+  /cors/health:
+    get:
+      tags:
+        - CORS Debug
+      summary: CORS health check
+      description: Check if CORS is properly configured and functioning
+      security: []
+      responses:
+        '200':
+          description: CORS health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, warning, error]
+                  cors_enabled:
+                    type: boolean
+                  filter_registered:
+                    type: boolean
+                  issues:
+                    type: array
+                    items:
+                      type: string
+                    description: List of configuration issues
+                  timestamp:
+                    type: string
+                    format: date-time
+
 # ==============================================================================
 # Components
 # ==============================================================================
@@ -1239,6 +1412,22 @@ components:
         maximum: 100
         default: 20
 
+    Sort:
+      name: sort
+      in: query
+      description: Field to sort by
+      schema:
+        type: string
+
+    Order:
+      name: order
+      in: query
+      description: Sort order
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: asc
+
     RoleId:
       name: id
       in: path
@@ -1253,13 +1442,43 @@ components:
       properties:
         id:
           type: integer
+          description: User ID
         username:
           type: string
+          description: Unique username
         email:
           type: string
+          format: email
+          description: User email address
+        full_name:
+          type: string
+          nullable: true
+          description: User's full name
+        department:
+          type: string
+          nullable: true
+          description: User's department
+        region:
+          type: string
+          nullable: true
+          description: User's region
+        is_active:
+          type: boolean
+          description: Whether the user account is active
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last login timestamp
         created_at:
           type: string
           format: date-time
+          description: Account creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last update timestamp
 
     Role:
       type: object
@@ -1372,28 +1591,46 @@ components:
       properties:
         id:
           type: integer
+          description: Assignment ID
         user_id:
           type: integer
+          description: User ID
         role_id:
           type: integer
+          description: Role ID
         assigned_by:
           type: integer
           nullable: true
-        valid_from:
-          type: string
-          format: date-time
-        valid_until:
+          description: ID of user who assigned the role
+        expires_at:
           type: string
           format: date-time
           nullable: true
-        status:
-          type: string
-          enum: [active, expired, revoked]
+          description: When the role assignment expires
+        scope_constraints:
+          type: object
+          nullable: true
+          description: Scope constraints for the role (e.g., department, region)
+          properties:
+            department:
+              type: string
+              nullable: true
+            region:
+              type: string
+              nullable: true
         created_at:
           type: string
           format: date-time
+          description: When the assignment was created
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the assignment was last updated
         role:
           $ref: '#/components/schemas/Role'
+        user:
+          $ref: '#/components/schemas/User'
 
     RoleAssignmentCreate:
       type: object
@@ -1403,18 +1640,28 @@ components:
       properties:
         user_id:
           type: integer
+          description: User ID to assign role to
         role_id:
           type: integer
-        valid_from:
-          type: string
-          format: date-time
-        valid_until:
+          description: Role ID to assign
+        expires_at:
           type: string
           format: date-time
           nullable: true
-        reason:
-          type: string
+          description: Optional expiration date for the role assignment
+        scope_constraints:
+          type: object
           nullable: true
+          description: Optional scope constraints (e.g., department, region)
+          properties:
+            department:
+              type: string
+              nullable: true
+              description: Limit role to specific department
+            region:
+              type: string
+              nullable: true
+              description: Limit role to specific region
 
     AuditLog:
       type: object

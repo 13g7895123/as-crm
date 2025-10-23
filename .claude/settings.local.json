@@ -26,7 +26,12 @@
       "Bash(npm run dev)",
       "Bash(lsof:*)",
       "Bash(curl:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(docker exec:*)",
+      "Bash(timeout 120 docker compose logs:*)",
+      "Bash(bash:*)",
+      "Bash(php spark:*)",
+      "Bash(./scripts/test-swagger.sh:*)"
     ],
     "deny": [],
     "ask": []
