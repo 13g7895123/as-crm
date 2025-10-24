@@ -38,6 +38,31 @@ docker compose down
 : Follow standard conventions
 
 ## Recent Changes
+- 2025-10-24: 統一 API 輸入格式為 JSON
+  - **修改範圍**：
+    - `AuthController::login()`: 從 `getPost()` 改為 `getJSON(true)`
+    - `AuthController::refresh()`: 從 `getPost()` 改為 `getJSON(true)`
+  - **測試結果**：
+    - ✅ POST /api/v1/auth/login 使用 JSON 成功
+    - ✅ POST /api/v1/auth/refresh 使用 JSON 成功
+  - **客戶端使用方式**：
+    ```bash
+    # 登入
+    curl -X POST http://localhost:9230/api/v1/auth/login \
+      -H "Content-Type: application/json" \
+      -d '{"username":"admin","password":"admin123"}'
+
+    # 刷新 Token
+    curl -X POST http://localhost:9230/api/v1/auth/refresh \
+      -H "Content-Type: application/json" \
+      -d '{"refresh_token":"YOUR_REFRESH_TOKEN"}'
+    ```
+- 2025-10-24: 新增缺失的 CodeIgniter 配置檔案
+  - **問題**：缺少 `app/Config/View.php` 和 `app/Config/Validation.php`
+  - **解決方案**：
+    - 創建 `View.php`: 繼承 `CodeIgniter\Config\View` 基礎配置
+    - 創建 `Validation.php`: 設定 validation rules 和 templates
+  - **影響**：修復了 API 請求時因缺少配置而導致的錯誤
 - 2025-10-24: 修改 build-backend-dev.sh 加入 phpMyAdmin
   - 在後端開發環境啟動腳本中加入 phpmyadmin 服務
   - 更新服務資訊輸出，顯示 phpMyAdmin URL 和登入資訊

@@ -29,9 +29,11 @@ class AuthController extends ResourceController
      */
     public function login()
     {
-        // 取得請求資料
-        $username = $this->request->getPost('username');
-        $password = $this->request->getPost('password');
+        // 取得 JSON 請求資料
+        $data = $this->request->getJSON(true);
+
+        $username = $data['username'] ?? null;
+        $password = $data['password'] ?? null;
 
         // 驗證必填欄位
         if (empty($username) || empty($password)) {
@@ -137,8 +139,10 @@ class AuthController extends ResourceController
      */
     public function refresh()
     {
-        // 取得 refresh token
-        $refreshToken = $this->request->getPost('refresh_token');
+        // 取得 JSON 請求資料
+        $data = $this->request->getJSON(true);
+
+        $refreshToken = $data['refresh_token'] ?? null;
 
         if (empty($refreshToken)) {
             return $this->failValidationErrors('缺少 refresh token');

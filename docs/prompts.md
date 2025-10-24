@@ -1,2 +1,1 @@
-1. 幫我在docker-compose加入phpmyadmin，一樣要讓外部port寫入.env中，統一控管
-2. 回覆請用zh-tw，幫我寫入CLAUDE.md
+1. 確認一下目前的api是否都是吃POST，如果是的話，幫我調整為json
