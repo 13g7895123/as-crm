@@ -60,12 +60,34 @@ class RoleSeeder extends Seeder
             ],
         ];
 
-        // 使用 Query Builder 插入資料
+        // 檢查現有角色，只插入不存在的
+        $existingRoles = $this->db->table('roles')
+            ->select('name')
+            ->whereIn('name', ['system_admin', 'sales_manager', 'sales_staff', 'customer_service'])
+            ->get()
+            ->getResultArray();
+
+        $existingRoleNames = array_column($existingRoles, 'name');
+
+        // 過濾出需要插入的角色
+        $insertedCount = 0;
         foreach ($roles as $role) {
-            $this->db->table('roles')->insert($role);
+            if (!in_array($role['name'], $existingRoleNames)) {
+                $this->db->table('roles')->insert($role);
+                $insertedCount++;
+            }
         }
 
-        echo "✅ 已建立 " . count($roles) . " 個預設角色\n";
+        if ($insertedCount > 0) {
+            echo "✅ 已建立 {$insertedCount} 個預設角色\n";
+        } else {
+            echo "⚠️  所有角色已存在，跳過建立\n";
+        }
+
+        $skippedCount = count($roles) - $insertedCount;
+        if ($skippedCount > 0) {
+            echo "⚠️  跳過 {$skippedCount} 個已存在的角色\n";
+        }
 
         // 建立角色階層關係 (Closure Table)
         // 每個角色至少需要一筆指向自己的記錄 (depth=0)
@@ -75,19 +97,36 @@ class RoleSeeder extends Seeder
             ->get()
             ->getResultArray();
 
+        // 檢查現有的階層關係
+        $existingHierarchy = $this->db->table('role_hierarchy')
+            ->select('ancestor_id, descendant_id')
+            ->get()
+            ->getResultArray();
+
+        $existingPairs = [];
+        foreach ($existingHierarchy as $h) {
+            $existingPairs[$h['ancestor_id'] . '-' . $h['descendant_id']] = true;
+        }
+
+        // 過濾出需要插入的階層關係
         $hierarchy = [];
         foreach ($roleIds as $role) {
-            $hierarchy[] = [
-                'ancestor_id'   => $role['id'],
-                'descendant_id' => $role['id'],
-                'depth'         => 0,
-            ];
+            $key = $role['id'] . '-' . $role['id'];
+            if (!isset($existingPairs[$key])) {
+                $hierarchy[] = [
+                    'ancestor_id'   => $role['id'],
+                    'descendant_id' => $role['id'],
+                    'depth'         => 0,
+                ];
+            }
         }
 
         // 插入角色階層資料
         if (!empty($hierarchy)) {
             $this->db->table('role_hierarchy')->insertBatch($hierarchy);
             echo "✅ 已建立 " . count($hierarchy) . " 筆角色階層關係 (自我參照)\n";
+        } else {
+            echo "⚠️  所有角色階層關係已存在，跳過建立\n";
         }
     }
 }

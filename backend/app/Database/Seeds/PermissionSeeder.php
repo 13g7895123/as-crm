@@ -117,10 +117,40 @@ class PermissionSeeder extends Seeder
             ],
         ];
 
-        // 使用 insertBatch 批次插入資料以提升效能
-        $this->db->table('permissions')->insertBatch($permissions);
+        // 檢查現有權限，只插入不存在的
+        $existingPermissions = $this->db->table('permissions')
+            ->select('module, action')
+            ->get()
+            ->getResultArray();
 
-        echo "✅ 已建立 " . count($permissions) . " 個預設權限\n";
+        // 建立現有權限的索引
+        $existingKeys = [];
+        foreach ($existingPermissions as $perm) {
+            $existingKeys[$perm['module'] . '-' . $perm['action']] = true;
+        }
+
+        // 過濾出需要插入的權限
+        $permissionsToInsert = [];
+        foreach ($permissions as $perm) {
+            $key = $perm['module'] . '-' . $perm['action'];
+            if (!isset($existingKeys[$key])) {
+                $permissionsToInsert[] = $perm;
+            }
+        }
+
+        if (count($permissionsToInsert) > 0) {
+            // 使用 insertBatch 批次插入資料以提升效能
+            $this->db->table('permissions')->insertBatch($permissionsToInsert);
+            echo "✅ 已建立 " . count($permissionsToInsert) . " 個預設權限\n";
+        } else {
+            echo "⚠️  所有權限已存在，跳過建立\n";
+        }
+
+        $totalPermissions = count($permissions);
+        $skippedPermissions = $totalPermissions - count($permissionsToInsert);
+        if ($skippedPermissions > 0) {
+            echo "⚠️  跳過 {$skippedPermissions} 個已存在的權限\n";
+        }
 
         // 顯示各模組的權限統計
         $moduleStats = [];

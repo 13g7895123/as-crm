@@ -25,6 +25,11 @@ class CorsFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
+        // Skip for CLI requests (spark commands, migrations, etc.)
+        if (is_cli()) {
+            return $request;
+        }
+
         // 取得 CORS 配置
         $corsConfig = config('Cors');
 
@@ -59,6 +64,11 @@ class CorsFilter implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
+        // Skip for CLI requests (spark commands, migrations, etc.)
+        if (is_cli()) {
+            return $response;
+        }
+
         // 取得 CORS 配置
         $corsConfig = config('Cors');
 

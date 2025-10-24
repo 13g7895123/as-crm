@@ -48,6 +48,11 @@ class SecurityHeadersFilter implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
+        // Skip for CLI requests (spark commands, migrations, etc.)
+        if (is_cli()) {
+            return $response;
+        }
+
         // Get environment
         $environment = getenv('CI_ENVIRONMENT') ?: 'production';
 

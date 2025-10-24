@@ -78,13 +78,13 @@ RUN chmod -R 777 writable public/uploads 2>/dev/null || true
 # 執行 Composer 後續腳本
 RUN composer dump-autoload --optimize
 
-# 開放 8080 port（CodeIgniter Spark 開發伺服器）
+# 開放 8080 port（PHP 內建開發伺服器）
 EXPOSE 8080
 
 # 健康檢查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD php -r "echo 'OK';" || exit 1
 
-# 啟動 CodeIgniter 開發伺服器
+# 啟動 PHP 內建開發伺服器
 # 注意: docker-compose.yml 會覆寫此 CMD
-CMD ["php", "spark", "serve", "--host=0.0.0.0", "--port=8080"]
+CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]

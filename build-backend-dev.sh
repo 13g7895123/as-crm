@@ -46,6 +46,11 @@ source .env
 
 echo -e "${GREEN}✓ 環境變數已載入${NC}"
 
+# Stop existing containers to release file locks
+echo ""
+echo "檢查並停止現有容器..."
+docker compose stop backend database 2>/dev/null || true
+
 # Create necessary directories
 echo ""
 echo "建立必要目錄..."
@@ -53,8 +58,22 @@ mkdir -p backend/writable/{cache,logs,session,uploads}
 mkdir -p backend/public/uploads
 mkdir -p docker/mariadb
 
-# Set permissions
-chmod -R 777 backend/writable
+# Clean up old log files owned by root (if any)
+echo "清理舊的日誌檔案..."
+if [ -w backend/writable/logs ]; then
+    # Try to remove old logs owned by root using sudo if needed
+    if ! rm -f backend/writable/logs/log-*.log 2>/dev/null; then
+        echo -e "${YELLOW}警告: 無法刪除部分日誌檔案（可能需要 sudo 權限）${NC}"
+        echo "嘗試使用 sudo 清理..."
+        sudo rm -f backend/writable/logs/log-*.log 2>/dev/null || echo -e "${YELLOW}跳過日誌清理${NC}"
+    fi
+fi
+
+# Set permissions (this will work now that old files are removed)
+echo "設定目錄權限..."
+chmod -R 777 backend/writable 2>/dev/null || {
+    echo -e "${YELLOW}警告: 部分權限設定失敗（將由容器內部處理）${NC}"
+}
 
 echo -e "${GREEN}✓ 目錄建立完成${NC}"
 
@@ -117,25 +136,25 @@ EOF
     echo -e "${GREEN}✓ Backend Dockerfile.dev 建立完成${NC}"
 fi
 
-# Build and start backend services only
+# Build and start backend services (including phpMyAdmin for database management)
 echo ""
-echo "建置與啟動後端服務（資料庫 + 後端 API）..."
-docker compose up -d --build database backend
+echo "建置與啟動後端服務（資料庫 + 後端 API + phpMyAdmin）..."
+docker compose up -d --build database backend phpmyadmin
 
 # Wait for database to be ready
 echo ""
 echo "等待資料庫啟動..."
 sleep 10
 
-# Run migrations
+# Run migrations using run-migrations.php (bypasses spark CLI issues)
 echo ""
 echo "執行資料庫 migrations..."
-docker compose exec backend php spark migrate || echo -e "${YELLOW}Migration 失敗或尚未建立${NC}"
+docker compose exec -T backend php run-migrations.php || echo -e "${YELLOW}Migration 失敗或尚未建立${NC}"
 
+# Run seeders using run-seeders.php
 echo ""
 echo "執行資料庫 seeders..."
-docker compose exec backend php spark db:seed RoleSeeder || echo -e "${YELLOW}RoleSeeder 尚未建立，跳過${NC}"
-docker compose exec backend php spark db:seed PermissionSeeder || echo -e "${YELLOW}PermissionSeeder 尚未建立，跳過${NC}"
+docker compose exec -T backend php run-seeders.php || echo -e "${YELLOW}Seeders 失敗或尚未建立${NC}"
 
 echo ""
 echo "=========================================="
@@ -145,14 +164,17 @@ echo ""
 echo "服務資訊："
 echo "  - Backend API: http://localhost:${BACKEND_PORT}"
 echo "  - Database: localhost:${DB_PORT}"
+echo "  - phpMyAdmin: http://localhost:${PHPMYADMIN_PORT}"
+echo "    (帳號: ${DB_USER} / 密碼: ${DB_PASSWORD})"
 echo ""
 echo "前端服務未啟動。如需啟動前端："
 echo "  ./build-frontend-dev.sh"
 echo ""
 echo "常用指令："
 echo "  查看日誌: docker compose logs -f backend"
-echo "  停止服務: docker compose stop backend database"
+echo "  停止服務: docker compose stop backend database phpmyadmin"
 echo "  重新啟動後端: docker compose restart backend"
 echo "  進入 backend 容器: docker compose exec backend bash"
-echo "  執行 migrations: docker compose exec backend php spark migrate"
+echo "  執行 migrations: docker compose exec backend php run-migrations.php"
+echo "  執行 seeders: docker compose exec backend php run-seeders.php"
 echo ""

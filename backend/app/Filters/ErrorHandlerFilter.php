@@ -40,6 +40,11 @@ class ErrorHandlerFilter implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
+        // Skip for CLI requests (spark commands, migrations, etc.)
+        if (is_cli()) {
+            return $response;
+        }
+
         // Check if response is an error (4xx or 5xx)
         $statusCode = $response->getStatusCode();
 

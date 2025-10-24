@@ -59,6 +59,11 @@ class RateLimitFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
+        // Skip for CLI requests (spark commands, migrations, etc.)
+        if (is_cli()) {
+            return $request;
+        }
+
         // Skip if rate limiting is disabled
         if (!$this->enabled) {
             return $request;
@@ -91,6 +96,11 @@ class RateLimitFilter implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
+        // Skip for CLI requests (spark commands, migrations, etc.)
+        if (is_cli()) {
+            return $response;
+        }
+
         // Skip if rate limiting is disabled
         if (!$this->enabled) {
             return $response;

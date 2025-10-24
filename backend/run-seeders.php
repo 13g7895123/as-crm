@@ -2,8 +2,8 @@
 <?php
 
 /**
- * Manual Migration Runner
- * This script bypasses the CLI routing system and runs migrations directly
+ * Manual Seeder Runner
+ * This script bypasses the CLI routing system and runs seeders directly
  */
 
 // Path to the front controller
@@ -43,44 +43,55 @@ require_once SYSTEMPATH . 'Config/DotEnv.php';
 // Load up our current environment file
 require APPPATH . 'Config/Boot/' . ENVIRONMENT . '.php';
 
-// Now manually run migrations
+// Now manually run seeders
 echo "==========================================\n";
-echo "Running Database Migrations\n";
+echo "Running Database Seeders\n";
 echo "==========================================\n\n";
 
-try {
-    // Get the migration service
-    $migrate = \Config\Services::migrations();
+// List of seeders to run in order
+// 注意: UserSeeder 必須在 RoleSeeder 之前執行，因為角色需要 created_by 欄位
+$seeders = [
+    'UserSeeder',        // 建立系統管理員（ID=1）
+    'RoleSeeder',        // 建立角色（需要 created_by=1）
+    'PermissionSeeder',  // 建立權限
+];
 
-    // Run all migrations
-    $result = $migrate->latest();
+$hasErrors = false;
 
-    if ($result === false) {
-        echo "Error running migrations:\n";
-        $messages = $migrate->getCliMessages();
-        if (is_array($messages)) {
-            echo implode("\n", $messages) . "\n";
-        } else {
-            echo $messages . "\n";
+foreach ($seeders as $seederName) {
+    echo "Running {$seederName}...\n";
+
+    try {
+        // Get the seeder instance
+        $seeder = \Config\Database::seeder();
+
+        // Run the seeder
+        $seeder->call($seederName);
+
+        echo "✓ {$seederName} completed successfully!\n\n";
+
+    } catch (\Throwable $e) {
+        echo "✗ Error running {$seederName}:\n";
+        echo "  Message: " . $e->getMessage() . "\n";
+        echo "  File: " . $e->getFile() . ":" . $e->getLine() . "\n";
+
+        if (ENVIRONMENT === 'development') {
+            echo "  Stack trace:\n" . $e->getTraceAsString() . "\n";
         }
-        exit(1);
-    }
 
-    echo "Migrations completed successfully!\n";
-    $messages = $migrate->getCliMessages();
-    if (is_array($messages) && !empty($messages)) {
-        echo implode("\n", $messages) . "\n";
-    } elseif (is_string($messages)) {
-        echo $messages . "\n";
+        echo "\n";
+        $hasErrors = true;
     }
-
-} catch (\Throwable $e) {
-    echo "Exception occurred: " . $e->getMessage() . "\n";
-    echo "File: " . $e->getFile() . ":" . $e->getLine() . "\n";
-    echo "Stack trace:\n" . $e->getTraceAsString() . "\n";
-    exit(1);
 }
 
-echo "\n==========================================\n";
-echo "Migration process completed\n";
 echo "==========================================\n";
+
+if ($hasErrors) {
+    echo "Seeder process completed with errors\n";
+    echo "==========================================\n";
+    exit(1);
+} else {
+    echo "All seeders completed successfully!\n";
+    echo "==========================================\n";
+    exit(0);
+}
