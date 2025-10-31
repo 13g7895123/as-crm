@@ -139,10 +139,10 @@ class RoleController extends BaseController
      * @param int $id
      * @return ResponseInterface
      */
-    public function show(int $id): ResponseInterface
+    public function show($id = null): ResponseInterface
     {
         try {
-            $role = $this->roleService->getRoleById($id);
+            $role = $this->roleService->getRoleById((int)$id);
 
             return $this->respond([
                 'data' => $role,
@@ -166,9 +166,10 @@ class RoleController extends BaseController
      * @param int $id
      * @return ResponseInterface
      */
-    public function update(int $id): ResponseInterface
+    public function update($id = null): ResponseInterface
     {
         try {
+            $id = (int)$id;
             $data = $this->request->getJSON(true);
 
             $role = $this->roleService->updateRole($id, $data);
@@ -205,9 +206,10 @@ class RoleController extends BaseController
      * @param int $id
      * @return ResponseInterface
      */
-    public function delete(int $id): ResponseInterface
+    public function delete($id = null): ResponseInterface
     {
         try {
+            $id = (int)$id;
             $this->roleService->deleteRole($id);
 
             return $this->respond([

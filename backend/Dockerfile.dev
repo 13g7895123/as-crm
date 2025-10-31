@@ -1,13 +1,13 @@
 # ============================================
 # Backend Development Dockerfile
 # ============================================
-# 用於開發環境的 PHP 8.1 CLI 映像
-# 支援 Hot Reload（透過 volume mount）
+# 用於開發環境的 PHP 8.1 FPM + Nginx
+# 完整的 CodeIgniter 4 生產級配置
 
-FROM php:8.1-cli
+FROM php:8.1-fpm
 
 LABEL maintainer="CRM RBAC Team"
-LABEL description="CRM RBAC Backend Development Environment"
+LABEL description="CRM RBAC Backend Development Environment with PHP-FPM"
 
 # 安裝系統依賴套件
 RUN apt-get update && apt-get install -y \
@@ -20,6 +20,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libicu-dev \
     libzip-dev \
+    nginx \
+    supervisor \
     && docker-php-ext-install \
         pdo_mysql \
         mysqli \
@@ -30,10 +32,11 @@ RUN apt-get update && apt-get install -y \
         gd \
         intl \
         zip \
+        opcache \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 安裝 APCu 快取擴充（用於應用程式層級快取）
+# 安裝 APCu 快取擴充
 RUN pecl install apcu && docker-php-ext-enable apcu
 
 # PHP 開發環境配置
@@ -47,13 +50,37 @@ RUN { \
     echo 'max_execution_time = 60'; \
 } > /usr/local/etc/php/conf.d/development.ini
 
-# APCu 開發配置
+# OPcache 開發配置（啟用但降低 revalidate 時間）
+RUN { \
+    echo 'opcache.enable=1'; \
+    echo 'opcache.enable_cli=1'; \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=10000'; \
+    echo 'opcache.revalidate_freq=2'; \
+    echo 'opcache.fast_shutdown=1'; \
+    echo 'opcache.validate_timestamps=1'; \
+} > /usr/local/etc/php/conf.d/opcache.ini
+
+# APCu 配置
 RUN { \
     echo 'apc.enable_cli=1'; \
     echo 'apc.shm_size=64M'; \
 } > /usr/local/etc/php/conf.d/apcu.ini
 
-# 安裝 Composer（最新版本）
+# PHP-FPM 配置（優化連接設定）
+RUN { \
+    echo '[www]'; \
+    echo 'pm = dynamic'; \
+    echo 'pm.max_children = 50'; \
+    echo 'pm.start_servers = 5'; \
+    echo 'pm.min_spare_servers = 5'; \
+    echo 'pm.max_spare_servers = 35'; \
+    echo 'pm.max_requests = 500'; \
+    echo 'catch_workers_output = yes'; \
+} > /usr/local/etc/php-fpm.d/www-custom.conf
+
+# 安裝 Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # 設定工作目錄
@@ -62,7 +89,7 @@ WORKDIR /var/www/html
 # 複製 composer 檔案
 COPY composer.json composer.lock* ./
 
-# 安裝 PHP 依賴套件（開發環境包含 dev 依賴）
+# 安裝 PHP 依賴套件
 RUN composer install \
     --no-interaction \
     --prefer-dist \
@@ -72,19 +99,30 @@ RUN composer install \
 # 複製應用程式檔案
 COPY . .
 
-# 設定權限（開發環境使用寬鬆權限）
-RUN chmod -R 777 writable public/uploads 2>/dev/null || true
+# 設定權限
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 777 writable public/uploads 2>/dev/null || true
 
 # 執行 Composer 後續腳本
 RUN composer dump-autoload --optimize
 
-# 開放 8080 port（PHP 內建開發伺服器）
+# 複製 Nginx 配置
+COPY docker/nginx/default.conf /etc/nginx/sites-available/default
+RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+
+# 複製 Supervisor 配置
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# 建立日誌目錄
+RUN mkdir -p /var/log/supervisor /var/log/nginx /var/log/php-fpm
+
+# 開放 8080 port
 EXPOSE 8080
 
 # 健康檢查
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD php -r "echo 'OK';" || exit 1
+    CMD curl -f http://localhost:8080/health || exit 1
 
-# 啟動 PHP 內建開發伺服器
-# 注意: docker-compose.yml 會覆寫此 CMD
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]
+# 使用 Supervisor 管理 Nginx 和 PHP-FPM
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

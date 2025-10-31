@@ -48,24 +48,24 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      */
     $routes->group('roles', ['filter' => 'auth'], function ($routes) {
         // Hierarchy routes (must be before (:num) routes)
-        $routes->get('hierarchy', 'RoleController::hierarchy', ['as' => 'api.roles.hierarchyTree']);
+        $routes->get('hierarchy', 'API\RoleController::hierarchy', ['as' => 'api.roles.hierarchyTree']);
 
         // Standard CRUD routes
-        $routes->get('/', 'RoleController::index', ['as' => 'api.roles.index']);
-        $routes->get('(:num)', 'RoleController::show/$1', ['as' => 'api.roles.show']);
-        $routes->post('/', 'RoleController::create', ['as' => 'api.roles.create']);
-        $routes->put('(:num)', 'RoleController::update/$1', ['as' => 'api.roles.update']);
-        $routes->delete('(:num)', 'RoleController::delete/$1', ['as' => 'api.roles.delete']);
+        $routes->get('/', 'API\RoleController::index', ['as' => 'api.roles.index']);
+        $routes->get('(:num)', 'API\RoleController::show/$1', ['as' => 'api.roles.show']);
+        $routes->post('/', 'API\RoleController::create', ['as' => 'api.roles.create']);
+        $routes->put('(:num)', 'API\RoleController::update/$1', ['as' => 'api.roles.update']);
+        $routes->delete('(:num)', 'API\RoleController::delete/$1', ['as' => 'api.roles.delete']);
 
         // Role hierarchy routes
-        $routes->get('(:num)/hierarchy', 'RoleController::roleHierarchy/$1', ['as' => 'api.roles.roleHierarchy']);
-        $routes->put('(:num)/parent', 'RoleController::updateParent/$1', ['as' => 'api.roles.updateParent']);
-        $routes->post('(:num)/parents', 'RoleController::addParent/$1', ['as' => 'api.roles.addParent']);
-        $routes->delete('(:num)/parents/(:num)', 'RoleController::removeParent/$1/$2', ['as' => 'api.roles.removeParent']);
+        $routes->get('(:num)/hierarchy', 'API\RoleController::roleHierarchy/$1', ['as' => 'api.roles.roleHierarchy']);
+        $routes->put('(:num)/parent', 'API\RoleController::updateParent/$1', ['as' => 'api.roles.updateParent']);
+        $routes->post('(:num)/parents', 'API\RoleController::addParent/$1', ['as' => 'api.roles.addParent']);
+        $routes->delete('(:num)/parents/(:num)', 'API\RoleController::removeParent/$1/$2', ['as' => 'api.roles.removeParent']);
 
         // Role permissions routes
-        $routes->get('(:num)/permissions', 'RoleController::permissions/$1', ['as' => 'api.roles.permissions']);
-        $routes->post('(:num)/permissions', 'RoleController::assignPermissions/$1', ['as' => 'api.roles.assignPermissions']);
+        $routes->get('(:num)/permissions', 'API\RoleController::permissions/$1', ['as' => 'api.roles.permissions']);
+        $routes->post('(:num)/permissions', 'API\RoleController::assignPermissions/$1', ['as' => 'api.roles.assignPermissions']);
     });
 
     /**

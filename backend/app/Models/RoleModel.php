@@ -172,13 +172,20 @@ class RoleModel extends Model
         $page = $filters['page'] ?? 1;
         $perPage = $filters['per_page'] ?? 20;
 
+        // Get total count before pagination
+        $total = $builder->countAllResults(false);
+
+        // Get paginated data
+        $offset = ($page - 1) * $perPage;
+        $data = $builder->limit($perPage, $offset)->get()->getResultArray();
+
         return [
-            'data' => $builder->paginate($perPage, 'default', $page),
+            'data' => $data,
             'meta' => [
-                'current_page' => $page,
-                'per_page'     => $perPage,
-                'total'        => $this->countAllResults(false),
-                'total_pages'  => ceil($this->countAllResults(false) / $perPage),
+                'current_page' => (int)$page,
+                'per_page'     => (int)$perPage,
+                'total'        => $total,
+                'total_pages'  => (int)ceil($total / $perPage),
             ],
         ];
     }

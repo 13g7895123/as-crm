@@ -32,7 +32,10 @@
       "Bash(bash:*)",
       "Bash(php spark:*)",
       "Bash(./scripts/test-swagger.sh:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(python3:*)",
+      "Bash(/home/jarvis/project/idea/as/as.crm/test-roles-api.sh:*)",
+      "Bash(./test-roles-api.sh:*)"
     ],
     "deny": [],
     "ask": []

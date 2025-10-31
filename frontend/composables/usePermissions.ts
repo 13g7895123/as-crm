@@ -28,7 +28,7 @@ export function usePermissions() {
    * Get API base URL
    */
   const getApiUrl = () => {
-    return config.public.apiBase || 'http://localhost:8080/api/v1'
+    return config.public.apiBaseUrl || 'http://localhost:8080/api/v1'
   }
 
   /**
