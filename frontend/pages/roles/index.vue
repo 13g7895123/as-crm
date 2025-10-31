@@ -96,15 +96,43 @@
       <table class="min-w-full divide-y divide-gray-200" data-testid="roles-table">
         <thead class="bg-gray-50">
           <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">角色</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">描述</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">類型</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-for="role in roles" :key="role.id" data-testid="role-row">
+            <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium space-x-3">
+              <NuxtLink
+                :to="`/roles/${role.id}`"
+                data-testid="view-role-button"
+                class="text-indigo-600 hover:text-indigo-900"
+              >
+                檢視
+              </NuxtLink>
+              <NuxtLink
+                :to="`/roles/${role.id}/edit`"
+                data-testid="edit-role-button"
+                class="text-indigo-600 hover:text-indigo-900"
+              >
+                編輯
+              </NuxtLink>
+              <button
+                v-if="!role.is_system"
+                type="button"
+                data-testid="delete-role-button"
+                @click="confirmDelete(role)"
+                class="text-red-600 hover:text-red-900"
+              >
+                刪除
+              </button>
+              <span v-else data-testid="delete-role-button" class="text-gray-400 cursor-not-allowed" disabled>
+                刪除
+              </span>
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm font-medium text-gray-900" data-testid="role-display-name">
                 {{ role.display_name }}
@@ -135,34 +163,6 @@
                 ]"
               >
                 {{ !role.deleted_at ? '啟用' : '停用' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-              <NuxtLink
-                :to="`/roles/${role.id}`"
-                data-testid="view-role-button"
-                class="text-indigo-600 hover:text-indigo-900"
-              >
-                檢視
-              </NuxtLink>
-              <NuxtLink
-                :to="`/roles/${role.id}/edit`"
-                data-testid="edit-role-button"
-                class="text-indigo-600 hover:text-indigo-900"
-              >
-                編輯
-              </NuxtLink>
-              <button
-                v-if="!role.is_system"
-                type="button"
-                data-testid="delete-role-button"
-                @click="confirmDelete(role)"
-                class="text-red-600 hover:text-red-900"
-              >
-                刪除
-              </button>
-              <span v-else data-testid="delete-role-button" class="text-gray-400 cursor-not-allowed" disabled>
-                刪除
               </span>
             </td>
           </tr>

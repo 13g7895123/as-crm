@@ -14,10 +14,10 @@
 
     <!-- Form -->
     <div class="bg-white rounded-lg shadow">
-      <div class="px-6 py-4 border-b border-gray-200">
+      <div class="px-4 py-3 border-b border-gray-200">
         <h2 class="text-lg font-medium text-gray-900">基本資訊</h2>
       </div>
-      <div class="p-6">
+      <div class="p-4">
         <RoleForm
           :loading="loading"
           @submit="handleCreateRole"
@@ -27,21 +27,21 @@
     </div>
 
     <!-- Permissions Section -->
-    <div class="mt-6 bg-white rounded-lg shadow">
-      <div class="px-6 py-4 border-b border-gray-200">
+    <div class="mt-4 bg-white rounded-lg shadow">
+      <div class="px-4 py-3 border-b border-gray-200">
         <h2 class="text-lg font-medium text-gray-900">權限設定</h2>
       </div>
-      <div class="p-6">
+      <div class="p-4">
         <PermissionSelector v-model="selectedPermissions" />
       </div>
     </div>
 
     <!-- Conditions Section -->
-    <div class="mt-6 bg-white rounded-lg shadow">
-      <div class="px-6 py-4 border-b border-gray-200">
+    <div class="mt-4 bg-white rounded-lg shadow">
+      <div class="px-4 py-3 border-b border-gray-200">
         <h2 class="text-lg font-medium text-gray-900">條件限制</h2>
       </div>
-      <div class="p-6">
+      <div class="p-4">
         <ConditionBuilder v-model="conditionRules" />
       </div>
     </div>
@@ -117,6 +117,6 @@ const handleCancel = () => {
 
 <style scoped>
 .create-role-page {
-  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  @apply max-w-6xl mx-auto py-6;
 }
 </style>

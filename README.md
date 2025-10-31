@@ -174,9 +174,27 @@ The system uses 6 core tables:
 git clone https://github.com/yourusername/crm-rbac.git
 cd crm-rbac
 
-# Start all services
-./build-dev.sh
+# Development Environment (啟動後端，前端需手動啟動)
+./develop.sh
+cd frontend && npm run dev
+
+# Production Environment (完整部署所有服務)
+./production.sh
+
+# Production - Cache Only Update (僅清除快取)
+./production.sh --cache-only
 ```
+
+**開發環境說明：**
+- `develop.sh` 只啟動後端服務（資料庫 + API + phpMyAdmin）
+- 前端需要在另一個終端手動執行 `npm run dev`
+- 支援熱重載，適合開發階段使用
+
+**生產環境說明：**
+- `production.sh` 完整部署所有服務（前端 + 後端 + 資料庫）
+- 支援 `--cache-only` 參數快速清除快取並重啟
+- 自動檢查並停止現有容器
+- 執行資料庫遷移和 seeders
 
 Services will be available at:
 - **Frontend**: http://localhost:3000

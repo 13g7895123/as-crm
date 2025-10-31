@@ -45,14 +45,14 @@
             <button
               v-if="selectedParentId"
               @click="clearSelection"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              class="btn-secondary"
             >
               清除選擇
             </button>
             <button
               v-if="allowNoParent"
               @click="selectNone"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              class="btn-secondary"
             >
               設為頂層角色
             </button>
@@ -86,7 +86,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, defineComponent, h } from 'vue'
+import { useRuntimeConfig } from '#app'
 
 interface RoleNode {
   id: number
@@ -123,6 +124,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+const config = useRuntimeConfig()
 
 const loading = ref(true)
 const hierarchyTree = ref<RoleNode[]>([])
@@ -142,15 +144,17 @@ const loadHierarchy = async () => {
   loading.value = true
 
   try {
+    const apiBaseUrl = config.public.apiBaseUrl
+
     // Fetch hierarchy tree from API
-    const response = await fetch('/api/v1/roles/hierarchy')
+    const response = await fetch(`${apiBaseUrl}/roles/hierarchy`)
     const data = await response.json()
 
     hierarchyTree.value = data.data || []
 
     // Load current role info if provided
     if (props.currentRoleId) {
-      const roleResponse = await fetch(`/api/v1/roles/${props.currentRoleId}/hierarchy`)
+      const roleResponse = await fetch(`${apiBaseUrl}/roles/${props.currentRoleId}/hierarchy`)
       const roleData = await roleResponse.json()
       currentRoleInfo.value = roleData.data || null
 
@@ -181,7 +185,6 @@ const handleSelect = (nodeId: number) => {
   if (currentRoleInfo.value?.descendants) {
     const descendantIds = currentRoleInfo.value.descendants.map((d: any) => d.id)
     if (descendantIds.includes(nodeId)) {
-      // TODO: Show warning notification
       console.warn('Cannot select descendant role as parent')
       return
     }
@@ -266,19 +269,10 @@ const getAncestorNames = (): string[] => {
   return currentRoleInfo.value.ancestors.map((a: any) => a.display_name || a.name)
 }
 
-// Load on mount
-onMounted(() => {
-  loadHierarchy()
-})
-</script>
-
-<script setup lang="ts">
 /**
  * Role Node Component (Recursive)
  */
-import { defineComponent, h } from 'vue'
-
-const RoleNode = defineComponent({
+const RoleNode: any = defineComponent({
   name: 'RoleNode',
   props: {
     node: {
@@ -286,15 +280,15 @@ const RoleNode = defineComponent({
       required: true,
     },
     currentRoleId: {
-      type: Number as () => number | null,
+      type: [Number, null] as unknown as () => number | null,
       default: null,
     },
     selectedParentId: {
-      type: Number as () => number | null,
+      type: [Number, null] as unknown as () => number | null,
       default: null,
     },
     expandedNodes: {
-      type: Set as () => Set<number>,
+      type: Object as unknown as () => Set<number>,
       required: true,
     },
     level: {
@@ -310,6 +304,11 @@ const RoleNode = defineComponent({
     const isSelected = computed(() => props.node.id === props.selectedParentId)
     const isDisabled = computed(() => isCurrentRole.value)
 
+    // Calculate indent padding based on level (Tailwind-safe)
+    const indentStyle = computed(() => ({
+      paddingLeft: `${props.level * 1}rem`
+    }))
+
     const handleClick = () => {
       if (!isDisabled.value) {
         emit('select', props.node.id)
@@ -323,8 +322,6 @@ const RoleNode = defineComponent({
     }
 
     return () => {
-      const indentClass = `pl-${props.level * 4}`
-
       return h('div', { class: 'role-node' }, [
         // Node row
         h('div', {
@@ -332,8 +329,8 @@ const RoleNode = defineComponent({
             'flex items-center py-2 px-3 rounded-md cursor-pointer transition-colors',
             isSelected.value ? 'bg-indigo-50 border-l-4 border-indigo-600' : '',
             isCurrentRole.value ? 'bg-gray-100 opacity-60 cursor-not-allowed' : 'hover:bg-gray-50',
-            indentClass,
           ].filter(Boolean).join(' '),
+          style: indentStyle.value,
           onClick: handleClick,
         }, [
           // Expand/collapse icon
@@ -421,6 +418,11 @@ const RoleNode = defineComponent({
       ])
     }
   },
+})
+
+// Load on mount
+onMounted(() => {
+  loadHierarchy()
 })
 </script>
 

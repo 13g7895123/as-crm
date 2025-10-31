@@ -5,8 +5,9 @@
 .env.production
 .env.*.local
 
-# Keep .env.example for reference
+# Keep these for reference and development
 !.env.example
+!.env.dev
 
 # Backend (CodeIgniter 4)
 backend/writable/cache/*

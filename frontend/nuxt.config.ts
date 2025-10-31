@@ -42,7 +42,9 @@ export default defineNuxtConfig({
   ui: {},
 
   // CSS 配置
-  css: [],
+  css: [
+    '~/assets/css/main.css',
+  ],
 
   // Vite 配置
   vite: {

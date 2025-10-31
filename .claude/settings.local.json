@@ -31,7 +31,8 @@
       "Bash(timeout 120 docker compose logs:*)",
       "Bash(bash:*)",
       "Bash(php spark:*)",
-      "Bash(./scripts/test-swagger.sh:*)"
+      "Bash(./scripts/test-swagger.sh:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

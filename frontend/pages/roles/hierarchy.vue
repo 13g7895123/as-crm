@@ -40,7 +40,7 @@
     </div>
 
     <!-- Hierarchy Tree -->
-    <div v-else class="bg-white shadow rounded-lg p-6">
+    <div v-else class="bg-white shadow rounded-lg p-4">
       <div v-if="hierarchyTree.length === 0" class="text-center py-8 text-gray-500">
         沒有找到角色階層資料
       </div>
@@ -229,6 +229,6 @@ onMounted(() => {
 
 <style scoped>
 .role-hierarchy-page {
-  @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  @apply max-w-6xl mx-auto py-6;
 }
 </style>
