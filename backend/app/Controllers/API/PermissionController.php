@@ -47,6 +47,61 @@ class PermissionController extends BaseController
     }
 
     /**
+     * GET /api/v1/permissions/{id}
+     *
+     * Get permission details
+     *
+     * @param int $id
+     * @return ResponseInterface
+     */
+    public function show(int $id): ResponseInterface
+    {
+        try {
+            // TODO: Fetch from database
+            $permission = [
+                'id' => $id,
+                'module' => 'customer',
+                'action' => 'view',
+                'display_name' => '查看客戶',
+                'description' => '查看客戶資訊',
+            ];
+
+            return $this->respond([
+                'data' => $permission,
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->failServerError('取得權限詳情失敗: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * GET /api/v1/permissions/modules
+     *
+     * Get all modules
+     *
+     * @return ResponseInterface
+     */
+    public function modules(): ResponseInterface
+    {
+        try {
+            $modules = [
+                'customer',
+                'order',
+                'report',
+                'role',
+                'permission',
+                'audit_log',
+            ];
+
+            return $this->respond([
+                'data' => $modules,
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->failServerError('取得模組清單失敗: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * POST /api/v1/permissions/check
      *
      * Check user permissions

@@ -73,9 +73,14 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      * 需要 AuthFilter 驗證身份
      */
     $routes->group('permissions', ['filter' => 'auth'], function ($routes) {
+        // Special routes (must be before (:num) routes)
+        $routes->get('my', 'PermissionController::myPermissions', ['as' => 'api.permissions.my']);
+        $routes->post('check', 'PermissionController::check', ['as' => 'api.permissions.check']);
+        $routes->get('modules', 'PermissionController::modules', ['as' => 'api.permissions.modules']);
+        
+        // Standard routes
         $routes->get('/', 'PermissionController::index', ['as' => 'api.permissions.index']);
         $routes->get('(:num)', 'PermissionController::show/$1', ['as' => 'api.permissions.show']);
-        $routes->get('modules', 'PermissionController::modules', ['as' => 'api.permissions.modules']);
     });
 
     /**
@@ -125,9 +130,42 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      * 需要 AuthFilter 驗證身份
      */
     $routes->group('users', ['filter' => 'auth'], function ($routes) {
-        $routes->get('(:num)/permissions', 'API\UserPermissionController::permissions/$1', ['as' => 'api.users.permissions']);
-        $routes->get('(:num)/roles', 'API\RoleAssignmentController::userRoles/$1', ['as' => 'api.users.roles']);
-        $routes->post('(:num)/check-permission', 'API\UserPermissionController::checkPermission/$1', ['as' => 'api.users.checkPermission']);
+        $routes->get('(:num)/permissions', 'PermissionController::userPermissions/$1', ['as' => 'api.users.permissions']);
+        $routes->get('(:num)/roles', 'RoleAssignmentController::userRoles/$1', ['as' => 'api.users.roles']);
+        $routes->post('(:num)/check-permission', 'PermissionController::checkPermission/$1', ['as' => 'api.users.checkPermission']);
+    });
+
+    /**
+     * 客戶管理路由 (Customers)
+     * 需要 AuthFilter 驗證身份
+     */
+    $routes->group('customers', ['filter' => 'auth'], function ($routes) {
+        $routes->get('/', 'CustomerController::index', ['as' => 'api.customers.index']);
+        $routes->get('(:num)', 'CustomerController::show/$1', ['as' => 'api.customers.show']);
+        $routes->post('/', 'CustomerController::create', ['as' => 'api.customers.create']);
+        $routes->put('(:num)', 'CustomerController::update/$1', ['as' => 'api.customers.update']);
+        $routes->delete('(:num)', 'CustomerController::delete/$1', ['as' => 'api.customers.delete']);
+    });
+
+    /**
+     * 訂單管理路由 (Orders)
+     * 需要 AuthFilter 驗證身份
+     */
+    $routes->group('orders', ['filter' => 'auth'], function ($routes) {
+        $routes->get('/', 'OrderController::index', ['as' => 'api.orders.index']);
+        $routes->get('(:num)', 'OrderController::show/$1', ['as' => 'api.orders.show']);
+        $routes->post('/', 'OrderController::create', ['as' => 'api.orders.create']);
+        $routes->put('(:num)', 'OrderController::update/$1', ['as' => 'api.orders.update']);
+        $routes->delete('(:num)', 'OrderController::delete/$1', ['as' => 'api.orders.delete']);
+    });
+
+    /**
+     * 報表分析路由 (Reports)
+     * 需要 AuthFilter 驗證身份
+     */
+    $routes->group('reports', ['filter' => 'auth'], function ($routes) {
+        $routes->get('dashboard', 'ReportController::dashboard', ['as' => 'api.reports.dashboard']);
+        $routes->get('sales', 'ReportController::sales', ['as' => 'api.reports.sales']);
     });
 
     /**
