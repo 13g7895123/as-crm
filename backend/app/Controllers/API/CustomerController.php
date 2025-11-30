@@ -93,13 +93,17 @@ class CustomerController extends BaseController
      *
      * Get customer details
      *
-     * @param int $id
+     * @param int|null $id
      * @return ResponseInterface
      */
-    public function show(int $id): ResponseInterface
+    public function show($id = null): ResponseInterface
     {
         try {
-            $customer = $this->customerService->getCustomer($id);
+            if (!$id) {
+                return $this->failValidationErrors('客戶 ID 為必填');
+            }
+
+            $customer = $this->customerService->getCustomer((int)$id);
 
             if (!$customer) {
                 return $this->failNotFound('客戶不存在');
@@ -118,12 +122,16 @@ class CustomerController extends BaseController
      *
      * Update customer
      *
-     * @param int $id
+     * @param int|null $id
      * @return ResponseInterface
      */
-    public function update(int $id): ResponseInterface
+    public function update($id = null): ResponseInterface
     {
         try {
+            if (!$id) {
+                return $this->failValidationErrors('客戶 ID 為必填');
+            }
+
             $data = $this->request->getJSON(true);
 
             // Remove fields that shouldn't be updated
@@ -131,8 +139,8 @@ class CustomerController extends BaseController
 
             $data['updated_by'] = auth()->user()->id ?? 1;
 
-            $this->customerService->updateCustomer($id, $data);
-            $customer = $this->customerService->getCustomer($id);
+            $this->customerService->updateCustomer((int)$id, $data);
+            $customer = $this->customerService->getCustomer((int)$id);
 
             return $this->respond([
                 'data' => $customer,
@@ -148,13 +156,17 @@ class CustomerController extends BaseController
      *
      * Delete customer
      *
-     * @param int $id
+     * @param int|null $id
      * @return ResponseInterface
      */
-    public function delete(int $id): ResponseInterface
+    public function delete($id = null): ResponseInterface
     {
         try {
-            $this->customerService->deleteCustomer($id);
+            if (!$id) {
+                return $this->failValidationErrors('客戶 ID 為必填');
+            }
+
+            $this->customerService->deleteCustomer((int)$id);
 
             return $this->respond([
                 'message' => '客戶刪除成功',

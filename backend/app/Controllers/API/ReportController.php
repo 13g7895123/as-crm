@@ -52,10 +52,9 @@ class ReportController extends BaseController
                 ->where('deleted_at', null)
                 ->countAllResults();
 
-            // Active users
-            $activeUsers = $db->table('auth_identities')
-                ->where('deleted_at', null)
-                ->distinct()
+            // Active users - use users table instead of auth_identities
+            $activeUsers = $db->table('users')
+                ->where('is_active', 1)
                 ->countAllResults();
 
             $statistics = [

@@ -95,13 +95,17 @@ class OrderController extends BaseController
      *
      * Get order details
      *
-     * @param int $id
+     * @param int|null $id
      * @return ResponseInterface
      */
-    public function show(int $id): ResponseInterface
+    public function show($id = null): ResponseInterface
     {
         try {
-            $order = $this->orderService->getOrder($id);
+            if (!$id) {
+                return $this->failValidationErrors('訂單 ID 為必填');
+            }
+
+            $order = $this->orderService->getOrder((int)$id);
 
             if (!$order) {
                 return $this->failNotFound('訂單不存在');
@@ -120,12 +124,16 @@ class OrderController extends BaseController
      *
      * Update order
      *
-     * @param int $id
+     * @param int|null $id
      * @return ResponseInterface
      */
-    public function update(int $id): ResponseInterface
+    public function update($id = null): ResponseInterface
     {
         try {
+            if (!$id) {
+                return $this->failValidationErrors('訂單 ID 為必填');
+            }
+
             $data = $this->request->getJSON(true);
 
             // Remove fields that shouldn't be updated
@@ -133,8 +141,8 @@ class OrderController extends BaseController
 
             $data['updated_by'] = auth()->user()->id ?? 1;
 
-            $this->orderService->updateOrder($id, $data);
-            $order = $this->orderService->getOrder($id);
+            $this->orderService->updateOrder((int)$id, $data);
+            $order = $this->orderService->getOrder((int)$id);
 
             return $this->respond([
                 'data' => $order,
@@ -150,13 +158,17 @@ class OrderController extends BaseController
      *
      * Delete order
      *
-     * @param int $id
+     * @param int|null $id
      * @return ResponseInterface
      */
-    public function delete(int $id): ResponseInterface
+    public function delete($id = null): ResponseInterface
     {
         try {
-            $this->orderService->deleteOrder($id);
+            if (!$id) {
+                return $this->failValidationErrors('訂單 ID 為必填');
+            }
+
+            $this->orderService->deleteOrder((int)$id);
 
             return $this->respond([
                 'message' => '訂單刪除成功',

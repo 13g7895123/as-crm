@@ -54,6 +54,8 @@ $seeders = [
     'UserSeeder',        // 建立系統管理員（ID=1）
     'RoleSeeder',        // 建立角色（需要 created_by=1）
     'PermissionSeeder',  // 建立權限
+    'CustomerSeeder',    // 建立客戶測試資料
+    'OrderSeeder',       // 建立訂單測試資料
 ];
 
 $hasErrors = false;

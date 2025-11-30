@@ -62,24 +62,23 @@ class CreateOrdersTable extends Migration
                 'comment'    => '更新者 ID',
             ],
             'created_at' => [
-                'type'    => 'TIMESTAMP',
-                'default' => new \DateTime(),
+                'type'    => 'DATETIME',
+                'null'    => true,
                 'comment' => '建立時間',
             ],
             'updated_at' => [
-                'type'    => 'TIMESTAMP',
+                'type'    => 'DATETIME',
                 'null'    => true,
                 'comment' => '更新時間',
             ],
             'deleted_at' => [
-                'type'    => 'TIMESTAMP',
+                'type'    => 'DATETIME',
                 'null'    => true,
                 'comment' => '刪除時間 (軟刪除)',
             ],
         ]);
 
-        $this->forge->addKey('id', false, false, 'PRIMARY');
-        $this->forge->addKey('order_no');
+        $this->forge->addKey('id', true);
         $this->forge->addKey('customer_id');
         $this->forge->addKey('status');
         $this->forge->addKey('order_date');

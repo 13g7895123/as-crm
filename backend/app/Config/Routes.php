@@ -140,11 +140,11 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      * 需要 AuthFilter 驗證身份
      */
     $routes->group('customers', ['filter' => 'auth'], function ($routes) {
-        $routes->get('/', 'CustomerController::index', ['as' => 'api.customers.index']);
-        $routes->get('(:num)', 'CustomerController::show/$1', ['as' => 'api.customers.show']);
-        $routes->post('/', 'CustomerController::create', ['as' => 'api.customers.create']);
-        $routes->put('(:num)', 'CustomerController::update/$1', ['as' => 'api.customers.update']);
-        $routes->delete('(:num)', 'CustomerController::delete/$1', ['as' => 'api.customers.delete']);
+        $routes->get('/', 'API\CustomerController::index', ['as' => 'api.customers.index']);
+        $routes->get('(:num)', 'API\CustomerController::show/$1', ['as' => 'api.customers.show']);
+        $routes->post('/', 'API\CustomerController::create', ['as' => 'api.customers.create']);
+        $routes->put('(:num)', 'API\CustomerController::update/$1', ['as' => 'api.customers.update']);
+        $routes->delete('(:num)', 'API\CustomerController::delete/$1', ['as' => 'api.customers.delete']);
     });
 
     /**
@@ -152,11 +152,11 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      * 需要 AuthFilter 驗證身份
      */
     $routes->group('orders', ['filter' => 'auth'], function ($routes) {
-        $routes->get('/', 'OrderController::index', ['as' => 'api.orders.index']);
-        $routes->get('(:num)', 'OrderController::show/$1', ['as' => 'api.orders.show']);
-        $routes->post('/', 'OrderController::create', ['as' => 'api.orders.create']);
-        $routes->put('(:num)', 'OrderController::update/$1', ['as' => 'api.orders.update']);
-        $routes->delete('(:num)', 'OrderController::delete/$1', ['as' => 'api.orders.delete']);
+        $routes->get('/', 'API\OrderController::index', ['as' => 'api.orders.index']);
+        $routes->get('(:num)', 'API\OrderController::show/$1', ['as' => 'api.orders.show']);
+        $routes->post('/', 'API\OrderController::create', ['as' => 'api.orders.create']);
+        $routes->put('(:num)', 'API\OrderController::update/$1', ['as' => 'api.orders.update']);
+        $routes->delete('(:num)', 'API\OrderController::delete/$1', ['as' => 'api.orders.delete']);
     });
 
     /**
@@ -164,8 +164,8 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      * 需要 AuthFilter 驗證身份
      */
     $routes->group('reports', ['filter' => 'auth'], function ($routes) {
-        $routes->get('dashboard', 'ReportController::dashboard', ['as' => 'api.reports.dashboard']);
-        $routes->get('sales', 'ReportController::sales', ['as' => 'api.reports.sales']);
+        $routes->get('dashboard', 'API\ReportController::dashboard', ['as' => 'api.reports.dashboard']);
+        $routes->get('sales', 'API\ReportController::sales', ['as' => 'api.reports.sales']);
     });
 
     /**

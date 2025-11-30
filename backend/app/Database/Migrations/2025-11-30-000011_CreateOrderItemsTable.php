@@ -49,13 +49,13 @@ class CreateOrderItemsTable extends Migration
                 'comment'   => '小計 (quantity * unit_price)',
             ],
             'created_at' => [
-                'type'    => 'TIMESTAMP',
-                'default' => new \DateTime(),
+                'type'    => 'DATETIME',
+                'null'    => true,
                 'comment' => '建立時間',
             ],
         ]);
 
-        $this->forge->addKey('id', false, false, 'PRIMARY');
+        $this->forge->addKey('id', true);
         $this->forge->addKey('order_id');
 
         // 外鍵約束
