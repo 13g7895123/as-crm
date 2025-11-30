@@ -4,10 +4,15 @@
 # 藍綠部署配置
 #
 # 使用方式：
-#   藍色環境：DEPLOY_COLOR=blue docker compose -f docker-compose.blue-green.yml up -d
-#   綠色環境：DEPLOY_COLOR=green docker compose -f docker-compose.blue-green.yml up -d
+#   # 首次啟動（啟動資料庫 + nginx + 藍色環境）
+#   docker compose -f docker-compose.blue-green.yml up -d database nginx backend-blue frontend-blue
 #
-# 切換流量：修改 nginx upstream 指向
+#   # 部署綠色環境
+#   docker compose -f docker-compose.blue-green.yml up -d backend-green frontend-green
+#
+#   # 切換流量後清理藍色環境
+#   docker compose -f docker-compose.blue-green.yml stop backend-blue frontend-blue
+#
 # ============================================
 
 services:
@@ -32,7 +37,8 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -40,164 +46,9 @@ services:
           memory: 1G
 
   # ===========================================
-  # Backend - Blue Environment
-  # ===========================================
-  backend-blue:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: crm_backend_blue
-    restart: always
-    expose:
-      - "9000"
-    volumes:
-      - ./backend/writable:/var/www/html/writable
-      - ./backend/public/uploads:/var/www/html/public/uploads
-    environment:
-      CI_ENVIRONMENT: production
-      DATABASE_HOST: database
-      DATABASE_NAME: ${DB_NAME}
-      DATABASE_USER: ${DB_USER}
-      DATABASE_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      JWT_TIME_TO_LIVE: ${JWT_TIME_TO_LIVE:-3600}
-      JWT_REFRESH_TIME_TO_LIVE: ${JWT_REFRESH_TIME_TO_LIVE:-604800}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      DEPLOY_COLOR: blue
-    depends_on:
-      database:
-        condition: service_healthy
-    networks:
-      - crm_network
-    healthcheck:
-      test: ["CMD", "php", "-r", "echo 'healthy';"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-    profiles:
-      - blue
-      - all
-
-  # ===========================================
-  # Backend - Green Environment
-  # ===========================================
-  backend-green:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: crm_backend_green
-    restart: always
-    expose:
-      - "9000"
-    volumes:
-      - ./backend/writable:/var/www/html/writable
-      - ./backend/public/uploads:/var/www/html/public/uploads
-    environment:
-      CI_ENVIRONMENT: production
-      DATABASE_HOST: database
-      DATABASE_NAME: ${DB_NAME}
-      DATABASE_USER: ${DB_USER}
-      DATABASE_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      JWT_TIME_TO_LIVE: ${JWT_TIME_TO_LIVE:-3600}
-      JWT_REFRESH_TIME_TO_LIVE: ${JWT_REFRESH_TIME_TO_LIVE:-604800}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      DEPLOY_COLOR: green
-    depends_on:
-      database:
-        condition: service_healthy
-    networks:
-      - crm_network
-    healthcheck:
-      test: ["CMD", "php", "-r", "echo 'healthy';"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-    profiles:
-      - green
-      - all
-
-  # ===========================================
-  # Frontend - Blue Environment
-  # ===========================================
-  frontend-blue:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: crm_frontend_blue
-    restart: always
-    expose:
-      - "3000"
-    environment:
-      NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
-      NUXT_PUBLIC_APP_NAME: ${APP_NAME:-CRM 系統}
-      NODE_ENV: production
-      DEPLOY_COLOR: blue
-    depends_on:
-      - backend-blue
-    networks:
-      - crm_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-    profiles:
-      - blue
-      - all
-
-  # ===========================================
-  # Frontend - Green Environment
-  # ===========================================
-  frontend-green:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: crm_frontend_green
-    restart: always
-    expose:
-      - "3000"
-    environment:
-      NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
-      NUXT_PUBLIC_APP_NAME: ${APP_NAME:-CRM 系統}
-      NODE_ENV: production
-      DEPLOY_COLOR: green
-    depends_on:
-      - backend-green
-    networks:
-      - crm_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-    profiles:
-      - green
-      - all
-
-  # ===========================================
   # Nginx Reverse Proxy (流量入口)
   # ===========================================
+  # Nginx 不依賴特定環境，透過配置檔切換
   nginx:
     image: nginx:alpine
     container_name: crm_nginx_prod
@@ -212,13 +63,10 @@ services:
       - ./backend/public:/var/www/html/public:ro
     environment:
       - DEPLOY_COLOR=${DEPLOY_COLOR:-blue}
-    depends_on:
-      - backend-blue
-      - frontend-blue
     networks:
       - crm_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health", "||", "exit", "1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -227,6 +75,150 @@ services:
         limits:
           cpus: '0.5'
           memory: 256M
+
+  # ===========================================
+  # Backend - Blue Environment
+  # ===========================================
+  backend-blue:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crm_backend_blue
+    restart: unless-stopped
+    expose:
+      - "9000"
+    volumes:
+      - ./backend/writable:/var/www/html/writable
+      - ./backend/public/uploads:/var/www/html/public/uploads
+    environment:
+      CI_ENVIRONMENT: production
+      DATABASE_HOST: database
+      DATABASE_NAME: ${DB_NAME}
+      DATABASE_USER: ${DB_USER}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_TIME_TO_LIVE: ${JWT_TIME_TO_LIVE:-3600}
+      JWT_REFRESH_TIME_TO_LIVE: ${JWT_REFRESH_TIME_TO_LIVE:-604800}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      DEPLOY_COLOR: blue
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - crm_network
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  # ===========================================
+  # Backend - Green Environment
+  # ===========================================
+  backend-green:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crm_backend_green
+    restart: unless-stopped
+    expose:
+      - "9000"
+    volumes:
+      - ./backend/writable:/var/www/html/writable
+      - ./backend/public/uploads:/var/www/html/public/uploads
+    environment:
+      CI_ENVIRONMENT: production
+      DATABASE_HOST: database
+      DATABASE_NAME: ${DB_NAME}
+      DATABASE_USER: ${DB_USER}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_TIME_TO_LIVE: ${JWT_TIME_TO_LIVE:-3600}
+      JWT_REFRESH_TIME_TO_LIVE: ${JWT_REFRESH_TIME_TO_LIVE:-604800}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      DEPLOY_COLOR: green
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - crm_network
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm-healthcheck || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  # ===========================================
+  # Frontend - Blue Environment
+  # ===========================================
+  frontend-blue:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: crm_frontend_blue
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL:-/api/v1}
+      NUXT_PUBLIC_APP_NAME: ${APP_NAME:-CRM 系統}
+      NODE_ENV: production
+      DEPLOY_COLOR: blue
+    networks:
+      - crm_network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  # ===========================================
+  # Frontend - Green Environment
+  # ===========================================
+  frontend-green:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: crm_frontend_green
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL:-/api/v1}
+      NUXT_PUBLIC_APP_NAME: ${APP_NAME:-CRM 系統}
+      NODE_ENV: production
+      DEPLOY_COLOR: green
+    networks:
+      - crm_network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
 
 networks:
   crm_network:

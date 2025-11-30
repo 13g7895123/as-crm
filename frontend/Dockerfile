@@ -7,7 +7,7 @@
 # ============================================
 # Stage 1: Build Stage
 # ============================================
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 LABEL maintainer="CRM RBAC Team"
 LABEL description="CRM RBAC Frontend Build Stage"
@@ -25,8 +25,8 @@ WORKDIR /app
 # 複製 package 檔案
 COPY package*.json ./
 
-# 安裝生產環境依賴（使用 ci 確保 lock 檔案一致性）
-RUN npm ci --only=production --no-audit
+# 安裝所有依賴（包含 devDependencies 以進行建置）
+RUN npm install --no-audit --legacy-peer-deps
 
 # 複製應用程式檔案
 COPY . .
@@ -34,21 +34,18 @@ COPY . .
 # 建置 Nuxt 應用程式（產生 .output 目錄）
 RUN npm run build
 
-# 清理不必要的檔案以減少映像大小
-RUN rm -rf node_modules \
-    && npm ci --only=production --no-audit --ignore-scripts
-
 # ============================================
 # Stage 2: Production Stage
 # ============================================
-FROM node:18-alpine
+FROM node:20-alpine
 
 LABEL maintainer="CRM RBAC Team"
 LABEL description="CRM RBAC Frontend Production Environment"
 
 # 安裝執行時所需的最小套件
 RUN apk add --no-cache \
-    dumb-init
+    dumb-init \
+    wget
 
 # 建立非特權使用者
 RUN addgroup -g 1001 -S nodejs \
@@ -59,7 +56,6 @@ WORKDIR /app
 
 # 從 builder stage 複製產出檔案
 COPY --from=builder --chown=nuxt:nodejs /app/.output ./.output
-COPY --from=builder --chown=nuxt:nodejs /app/package*.json ./
 
 # 切換到非特權使用者
 USER nuxt
@@ -74,8 +70,8 @@ ENV PORT=3000
 ENV NUXT_TELEMETRY_DISABLED=1
 
 # 健康檢查
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD node --version || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget -q --spider http://localhost:3000/ || exit 1
 
 # 使用 dumb-init 啟動應用程式（正確處理訊號）
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]

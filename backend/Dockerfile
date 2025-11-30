@@ -30,7 +30,7 @@ RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 # ============================================
 # Stage 2: Production Runtime
 # ============================================
-FROM php:8.1-fpm
+FROM php:8.2-fpm
 
 LABEL maintainer="CRM RBAC Team"
 LABEL description="CRM RBAC Backend Production Environment"
@@ -44,6 +44,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     && docker-php-ext-install \
         pdo_mysql \
+        mysqli \
         mbstring \
         exif \
         pcntl \

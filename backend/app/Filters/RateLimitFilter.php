@@ -26,6 +26,7 @@ use Config\Services;
  *
  * @package App\Filters
  */
+#[\AllowDynamicProperties]
 class RateLimitFilter implements FilterInterface
 {
     /**
@@ -34,6 +35,11 @@ class RateLimitFilter implements FilterInterface
     private int $maxRequests;
     private int $period;
     private bool $enabled;
+
+    /**
+     * Temporary storage for rate limit data between before() and after()
+     */
+    private static ?array $currentRateLimitData = null;
 
     /**
      * Constructor
@@ -75,8 +81,8 @@ class RateLimitFilter implements FilterInterface
         // Check rate limit
         $rateLimitData = $this->checkRateLimit($clientId);
 
-        // Add rate limit headers to request for use in after()
-        $request->rateLimitData = $rateLimitData;
+        // Store rate limit data for use in after()
+        self::$currentRateLimitData = $rateLimitData;
 
         // If rate limit exceeded, return 429 response
         if ($rateLimitData['remaining'] < 0) {
@@ -107,8 +113,9 @@ class RateLimitFilter implements FilterInterface
         }
 
         // Add rate limit headers to response
-        if (isset($request->rateLimitData)) {
-            $this->addRateLimitHeaders($response, $request->rateLimitData);
+        if (self::$currentRateLimitData !== null) {
+            $this->addRateLimitHeaders($response, self::$currentRateLimitData);
+            self::$currentRateLimitData = null; // Clear after use
         }
 
         return $response;
