@@ -3,6 +3,7 @@
 namespace App\Controllers\API;
 
 use App\Controllers\BaseController;
+use App\Services\CustomerService;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
@@ -13,6 +14,13 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 class CustomerController extends BaseController
 {
+    protected $customerService;
+
+    public function __construct()
+    {
+        $this->customerService = new CustomerService();
+    }
+
     /**
      * GET /api/v1/customers
      *
@@ -23,74 +31,21 @@ class CustomerController extends BaseController
     public function index(): ResponseInterface
     {
         try {
-            $page = (int)($this->request->getGet('page') ?? 1);
-            $perPage = (int)($this->request->getGet('per_page') ?? 20);
-            $search = $this->request->getGet('search');
-
-            // Validate per_page
-            if ($perPage > 100) {
-                $perPage = 100;
-            }
-
-            // For now, return mock data structure
-            // TODO: Connect to database
-            $customers = [
-                [
-                    'id' => 1,
-                    'name' => 'TSMC',
-                    'code' => 'CUST001',
-                    'contact' => 'Mr. Chang',
-                    'phone' => '0912-345-678',
-                    'email' => 'contact@tsmc.com',
-                    'status' => 'active',
-                    'created_at' => '2023-10-01T00:00:00Z',
-                ],
-                [
-                    'id' => 2,
-                    'name' => 'MediaTek',
-                    'code' => 'CUST002',
-                    'contact' => 'Ms. Li',
-                    'phone' => '0923-456-789',
-                    'email' => 'contact@mediatek.com',
-                    'status' => 'active',
-                    'created_at' => '2023-10-02T00:00:00Z',
-                ],
-                [
-                    'id' => 3,
-                    'name' => 'Foxconn',
-                    'code' => 'CUST003',
-                    'contact' => 'Mr. Wang',
-                    'phone' => '0934-567-890',
-                    'email' => 'contact@foxconn.com',
-                    'status' => 'active',
-                    'created_at' => '2023-10-03T00:00:00Z',
-                ],
+            $filters = [
+                'page'     => (int)($this->request->getGet('page') ?? 1),
+                'per_page' => (int)($this->request->getGet('per_page') ?? 20),
+                'search'   => $this->request->getGet('search'),
+                'status'   => $this->request->getGet('status'),
             ];
 
-            // Filter by search term
-            if ($search) {
-                $customers = array_filter($customers, function ($customer) use ($search) {
-                    return stripos($customer['name'], $search) !== false ||
-                           stripos($customer['code'], $search) !== false ||
-                           stripos($customer['contact'], $search) !== false;
-                });
+            // Validate per_page
+            if ($filters['per_page'] > 100) {
+                $filters['per_page'] = 100;
             }
 
-            // Calculate pagination
-            $total = count($customers);
-            $totalPages = ceil($total / $perPage);
-            $offset = ($page - 1) * $perPage;
-            $paginatedCustomers = array_slice($customers, $offset, $perPage);
+            $result = $this->customerService->getCustomers($filters);
 
-            return $this->respond([
-                'data' => array_values($paginatedCustomers),
-                'meta' => [
-                    'current_page' => $page,
-                    'per_page' => $perPage,
-                    'total' => $total,
-                    'total_pages' => $totalPages,
-                ],
-            ], 200);
+            return $this->respond($result, 200);
         } catch (\Exception $e) {
             return $this->failServerError('取得客戶清單失敗: ' . $e->getMessage());
         }
@@ -109,33 +64,20 @@ class CustomerController extends BaseController
             $data = $this->request->getJSON(true);
 
             // Validate required fields
-            $required = ['name', 'contact', 'email'];
-            $errors = [];
-
-            foreach ($required as $field) {
-                if (empty($data[$field])) {
-                    $errors[$field] = [ucfirst($field) . '為必填'];
-                }
-            }
-
-            if (!empty($errors)) {
+            if (empty($data['name']) || empty($data['code'])) {
                 return $this->fail([
                     'error' => 'Validation Error',
-                    'errors' => $errors,
+                    'errors' => [
+                        'name' => empty($data['name']) ? ['客戶名稱為必填'] : [],
+                        'code' => empty($data['code']) ? ['客戶代碼為必填'] : [],
+                    ],
                 ], 422);
             }
 
-            // TODO: Save to database
-            $customer = [
-                'id' => rand(100, 999),
-                'name' => $data['name'],
-                'code' => $data['code'] ?? 'CUST' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT),
-                'contact' => $data['contact'],
-                'phone' => $data['phone'] ?? null,
-                'email' => $data['email'],
-                'status' => 'active',
-                'created_at' => date('c'),
-            ];
+            $data['created_by'] = auth()->user()->id ?? 1;
+            $customerId = $this->customerService->createCustomer($data);
+
+            $customer = $this->customerService->getCustomer($customerId);
 
             return $this->respond([
                 'data' => $customer,
@@ -157,17 +99,7 @@ class CustomerController extends BaseController
     public function show(int $id): ResponseInterface
     {
         try {
-            // TODO: Fetch from database
-            $customer = [
-                'id' => $id,
-                'name' => 'TSMC',
-                'code' => 'CUST001',
-                'contact' => 'Mr. Chang',
-                'phone' => '0912-345-678',
-                'email' => 'contact@tsmc.com',
-                'status' => 'active',
-                'created_at' => '2023-10-01T00:00:00Z',
-            ];
+            $customer = $this->customerService->getCustomer($id);
 
             if (!$customer) {
                 return $this->failNotFound('客戶不存在');
@@ -194,17 +126,13 @@ class CustomerController extends BaseController
         try {
             $data = $this->request->getJSON(true);
 
-            // TODO: Update in database
-            $customer = [
-                'id' => $id,
-                'name' => $data['name'] ?? 'TSMC',
-                'code' => 'CUST001',
-                'contact' => $data['contact'] ?? 'Mr. Chang',
-                'phone' => $data['phone'] ?? '0912-345-678',
-                'email' => $data['email'] ?? 'contact@tsmc.com',
-                'status' => $data['status'] ?? 'active',
-                'created_at' => '2023-10-01T00:00:00Z',
-            ];
+            // Remove fields that shouldn't be updated
+            unset($data['id'], $data['created_at'], $data['created_by']);
+
+            $data['updated_by'] = auth()->user()->id ?? 1;
+
+            $this->customerService->updateCustomer($id, $data);
+            $customer = $this->customerService->getCustomer($id);
 
             return $this->respond([
                 'data' => $customer,
@@ -226,7 +154,8 @@ class CustomerController extends BaseController
     public function delete(int $id): ResponseInterface
     {
         try {
-            // TODO: Delete from database
+            $this->customerService->deleteCustomer($id);
+
             return $this->respond([
                 'message' => '客戶刪除成功',
             ], 200);
@@ -235,3 +164,4 @@ class CustomerController extends BaseController
         }
     }
 }
+

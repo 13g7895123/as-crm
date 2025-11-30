@@ -3,6 +3,7 @@
 namespace App\Controllers\API;
 
 use App\Controllers\BaseController;
+use App\Services\OrderService;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
@@ -13,6 +14,13 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 class OrderController extends BaseController
 {
+    protected $orderService;
+
+    public function __construct()
+    {
+        $this->orderService = new OrderService();
+    }
+
     /**
      * GET /api/v1/orders
      *
@@ -23,79 +31,22 @@ class OrderController extends BaseController
     public function index(): ResponseInterface
     {
         try {
-            $page = (int)($this->request->getGet('page') ?? 1);
-            $perPage = (int)($this->request->getGet('per_page') ?? 20);
-            $customerId = $this->request->getGet('customer_id');
-            $status = $this->request->getGet('status');
-
-            // Validate per_page
-            if ($perPage > 100) {
-                $perPage = 100;
-            }
-
-            // Mock data
-            $orders = [
-                [
-                    'id' => 1,
-                    'order_no' => 'ORD-20231001-001',
-                    'customer_id' => 1,
-                    'customer_name' => 'TSMC',
-                    'amount' => 1500000.00,
-                    'order_date' => '2023-10-01',
-                    'status' => 'completed',
-                    'created_at' => '2023-10-01T00:00:00Z',
-                ],
-                [
-                    'id' => 2,
-                    'order_no' => 'ORD-20231002-002',
-                    'customer_id' => 2,
-                    'customer_name' => 'MediaTek',
-                    'amount' => 800000.00,
-                    'order_date' => '2023-10-02',
-                    'status' => 'processing',
-                    'created_at' => '2023-10-02T00:00:00Z',
-                ],
-                [
-                    'id' => 3,
-                    'order_no' => 'ORD-20231003-003',
-                    'customer_id' => 3,
-                    'customer_name' => 'Foxconn',
-                    'amount' => 2200000.00,
-                    'order_date' => '2023-10-03',
-                    'status' => 'pending',
-                    'created_at' => '2023-10-03T00:00:00Z',
-                ],
+            $filters = [
+                'page'         => (int)($this->request->getGet('page') ?? 1),
+                'per_page'     => (int)($this->request->getGet('per_page') ?? 20),
+                'customer_id'  => $this->request->getGet('customer_id'),
+                'status'       => $this->request->getGet('status'),
+                'search'       => $this->request->getGet('search'),
             ];
 
-            // Filter by customer_id
-            if ($customerId) {
-                $orders = array_filter($orders, function ($order) use ($customerId) {
-                    return $order['customer_id'] == $customerId;
-                });
+            // Validate per_page
+            if ($filters['per_page'] > 100) {
+                $filters['per_page'] = 100;
             }
 
-            // Filter by status
-            if ($status) {
-                $orders = array_filter($orders, function ($order) use ($status) {
-                    return $order['status'] === $status;
-                });
-            }
+            $result = $this->orderService->getOrders($filters);
 
-            // Calculate pagination
-            $total = count($orders);
-            $totalPages = ceil($total / $perPage);
-            $offset = ($page - 1) * $perPage;
-            $paginatedOrders = array_slice($orders, $offset, $perPage);
-
-            return $this->respond([
-                'data' => array_values($paginatedOrders),
-                'meta' => [
-                    'current_page' => $page,
-                    'per_page' => $perPage,
-                    'total' => $total,
-                    'total_pages' => $totalPages,
-                ],
-            ], 200);
+            return $this->respond($result, 200);
         } catch (\Exception $e) {
             return $this->failServerError('取得訂單清單失敗: ' . $e->getMessage());
         }
@@ -114,33 +65,21 @@ class OrderController extends BaseController
             $data = $this->request->getJSON(true);
 
             // Validate required fields
-            $required = ['customer_id', 'amount', 'order_date'];
-            $errors = [];
-
-            foreach ($required as $field) {
-                if (empty($data[$field])) {
-                    $errors[$field] = [ucfirst($field) . '為必填'];
-                }
-            }
-
-            if (!empty($errors)) {
+            if (empty($data['customer_id']) || empty($data['amount']) || empty($data['order_date'])) {
                 return $this->fail([
                     'error' => 'Validation Error',
-                    'errors' => $errors,
+                    'errors' => [
+                        'customer_id' => empty($data['customer_id']) ? ['客戶 ID 為必填'] : [],
+                        'amount'      => empty($data['amount']) ? ['訂單金額為必填'] : [],
+                        'order_date'  => empty($data['order_date']) ? ['訂單日期為必填'] : [],
+                    ],
                 ], 422);
             }
 
-            // TODO: Save to database
-            $order = [
-                'id' => rand(100, 999),
-                'order_no' => 'ORD-' . date('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
-                'customer_id' => $data['customer_id'],
-                'customer_name' => 'Customer Name', // TODO: Fetch from database
-                'amount' => $data['amount'],
-                'order_date' => $data['order_date'],
-                'status' => 'pending',
-                'created_at' => date('c'),
-            ];
+            $data['created_by'] = auth()->user()->id ?? 1;
+            $orderId = $this->orderService->createOrder($data);
+
+            $order = $this->orderService->getOrder($orderId);
 
             return $this->respond([
                 'data' => $order,
@@ -162,17 +101,7 @@ class OrderController extends BaseController
     public function show(int $id): ResponseInterface
     {
         try {
-            // TODO: Fetch from database
-            $order = [
-                'id' => $id,
-                'order_no' => 'ORD-20231001-001',
-                'customer_id' => 1,
-                'customer_name' => 'TSMC',
-                'amount' => 1500000.00,
-                'order_date' => '2023-10-01',
-                'status' => 'completed',
-                'created_at' => '2023-10-01T00:00:00Z',
-            ];
+            $order = $this->orderService->getOrder($id);
 
             if (!$order) {
                 return $this->failNotFound('訂單不存在');
@@ -199,17 +128,13 @@ class OrderController extends BaseController
         try {
             $data = $this->request->getJSON(true);
 
-            // TODO: Update in database
-            $order = [
-                'id' => $id,
-                'order_no' => 'ORD-20231001-001',
-                'customer_id' => 1,
-                'customer_name' => 'TSMC',
-                'amount' => $data['amount'] ?? 1500000.00,
-                'order_date' => '2023-10-01',
-                'status' => $data['status'] ?? 'completed',
-                'created_at' => '2023-10-01T00:00:00Z',
-            ];
+            // Remove fields that shouldn't be updated
+            unset($data['id'], $data['order_no'], $data['created_at'], $data['created_by']);
+
+            $data['updated_by'] = auth()->user()->id ?? 1;
+
+            $this->orderService->updateOrder($id, $data);
+            $order = $this->orderService->getOrder($id);
 
             return $this->respond([
                 'data' => $order,
@@ -231,7 +156,8 @@ class OrderController extends BaseController
     public function delete(int $id): ResponseInterface
     {
         try {
-            // TODO: Delete from database
+            $this->orderService->deleteOrder($id);
+
             return $this->respond([
                 'message' => '訂單刪除成功',
             ], 200);
