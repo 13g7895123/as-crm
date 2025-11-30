@@ -112,31 +112,57 @@ A comprehensive Role-Based Access Control (RBAC) system with hierarchical roles,
 ## 🏗 Architecture
 
 ```
-crm-rbac/
-├── backend/                 # CodeIgniter 4 API
+crm/
+├── docs/                        # 📖 All documentation
+│   ├── api/                     # API documentation
+│   │   ├── openapi.yaml
+│   │   └── API_DOCUMENTATION.md
+│   ├── database/                # Database documentation
+│   │   └── database-indexing-strategy.md
+│   ├── development/             # Development guides
+│   │   ├── DEPLOYMENT.md
+│   │   ├── TESTING.md
+│   │   └── PROBLEM_DIAGNOSIS.md
+│   └── troubleshooting/         # Troubleshooting guides
+│       └── CORS-TROUBLESHOOTING.md
+│
+├── scripts/                     # 🔧 All scripts
+│   ├── dev/                     # Development scripts
+│   │   └── develop.sh
+│   ├── deploy/                  # Deployment scripts
+│   │   ├── production.sh
+│   │   └── run-migrations.sh
+│   ├── db/                      # Database scripts
+│   │   └── backup-database.sh
+│   └── test/                    # Test scripts
+│       ├── health-check.sh
+│       └── test-*.sh
+│
+├── docker/                      # 🐳 Docker configurations
+│   ├── mariadb/
+│   ├── mysql-init/
+│   └── nginx/
+│
+├── specs/                       # 📋 Feature specifications
+│   └── 001-rbac-permission-management/
+│
+├── backend/                     # ⚙️ Backend (CodeIgniter 4)
 │   ├── app/
-│   │   ├── Controllers/    # API endpoints
-│   │   ├── Models/         # Data models
-│   │   ├── Services/       # Business logic
-│   │   ├── Filters/        # Middleware
-│   │   └── Helpers/        # Utility functions
-│   ├── tests/              # PHPUnit tests
-│   └── docs/               # API documentation
+│   │   ├── Controllers/         # API endpoints
+│   │   ├── Models/              # Data models
+│   │   ├── Services/            # Business logic
+│   │   ├── Filters/             # Middleware
+│   │   └── Helpers/             # Utility functions
+│   └── tests/                   # PHPUnit tests
 │
-├── frontend/               # Nuxt 3 application
-│   ├── pages/             # Vue pages/routes
-│   ├── components/        # Reusable components
-│   ├── composables/       # Composition functions
-│   ├── stores/            # Pinia stores
-│   └── tests/             # Vitest + Playwright tests
+├── frontend/                    # 🎨 Frontend (Nuxt 3)
+│   ├── pages/                   # Vue pages/routes
+│   ├── components/              # Reusable components
+│   ├── composables/             # Composition functions
+│   ├── stores/                  # Pinia stores
+│   └── tests/                   # Vitest + Playwright tests
 │
-├── scripts/               # Deployment scripts
-│   ├── backup-database.sh
-│   ├── run-migrations.sh
-│   └── health-check.sh
-│
-├── docs/                  # Project documentation
-└── .github/workflows/     # CI/CD workflows
+└── .github/workflows/           # CI/CD workflows
 ```
 
 ### Database Schema
@@ -419,7 +445,7 @@ The complete OpenAPI 3.0 specification is available at:
 | `/api/v1/role-assignments` | POST | Assign role to user |
 | `/api/v1/audit-logs` | GET | Get audit logs |
 
-For complete API documentation, see [API_DOCUMENTATION.md](backend/docs/API_DOCUMENTATION.md)
+For complete API documentation, see [API_DOCUMENTATION.md](docs/api/API_DOCUMENTATION.md)
 
 ## 🧪 Testing
 
@@ -460,10 +486,10 @@ npm run test:e2e --ui
 
 ```bash
 # Run health check
-./scripts/health-check.sh --verbose
+./scripts/test/health-check.sh --verbose
 
 # Test database connectivity
-./scripts/health-check.sh --json
+./scripts/test/health-check.sh --json
 ```
 
 ## 🚢 Deployment
@@ -488,10 +514,10 @@ docker-compose down
 
 ```bash
 # 1. Backup database
-./scripts/backup-database.sh production
+./scripts/db/backup-database.sh production
 
 # 2. Run migrations
-./scripts/run-migrations.sh
+./scripts/deploy/run-migrations.sh
 
 # 3. Build frontend
 cd frontend && npm run build
@@ -504,7 +530,7 @@ sudo systemctl restart php8.1-fpm nginx
 pm2 restart crm-frontend
 
 # 6. Verify deployment
-./scripts/health-check.sh --verbose
+./scripts/test/health-check.sh --verbose
 ```
 
 ### CI/CD
@@ -571,7 +597,7 @@ See [.github/workflows/](.github/workflows/) for details.
   - Compression (gzip)
   - CDN-friendly headers
 
-For performance tuning, see [database-indexing-strategy.md](backend/docs/database-indexing-strategy.md)
+For performance tuning, see [database-indexing-strategy.md](docs/database/database-indexing-strategy.md)
 
 ## 🤝 Contributing
 

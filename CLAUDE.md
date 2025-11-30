@@ -7,9 +7,27 @@ Auto-generated from all feature plans. Last updated: 2025-10-21
 
 ## Project Structure
 ```
-backend/
-frontend/
-tests/
+crm/
+├── docs/                    # 📖 All documentation
+│   ├── api/                 # API docs (openapi.yaml, API_DOCUMENTATION.md)
+│   ├── database/            # Database docs
+│   ├── development/         # DEPLOYMENT.md, TESTING.md, PROBLEM_DIAGNOSIS.md
+│   └── troubleshooting/     # CORS, Swagger troubleshooting
+├── scripts/                 # 🔧 All scripts
+│   ├── dev/                 # develop.sh
+│   ├── deploy/              # production.sh, run-migrations.sh
+│   ├── db/                  # backup-database.sh
+│   └── test/                # health-check.sh, test-*.sh
+├── docker/                  # 🐳 Docker configs (mariadb, nginx, mysql-init)
+├── specs/                   # 📋 Feature specifications
+├── backend/                 # ⚙️ CodeIgniter 4 API
+│   └── app/                 # Controllers, Models, Services, Filters, Helpers
+├── frontend/                # 🎨 Nuxt 3 App
+│   ├── pages/               # Vue pages/routes
+│   ├── components/          # Reusable components
+│   ├── composables/         # Composition functions
+│   └── stores/              # Pinia stores
+└── .github/workflows/       # CI/CD workflows
 ```
 
 ## Commands
