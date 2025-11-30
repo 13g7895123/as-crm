@@ -6,16 +6,17 @@
 # 生產環境部署腳本
 #
 # 功能:
-#   - 標準部署（單一環境）
-#   - 藍綠部署（零停機）
+#   - 預設使用藍綠部署（零停機）
+#   - 支援標準部署（單一環境）
 #   - 清除快取
 #   - 執行資料庫遷移
 #
 # 使用方式:
-#   ./production.sh                    # 標準完整部署
+#   ./production.sh                    # 藍綠部署（預設，零停機）
+#   ./production.sh --standard         # 標準完整部署（有停機）
 #   ./production.sh --cache-only       # 僅清除快取並重啟
-#   ./production.sh --blue-green       # 藍綠部署（零停機）
 #   ./production.sh --status           # 查看部署狀態
+#   ./production.sh --rollback         # 回滾到上一個環境
 #
 # ============================================================================
 
@@ -36,37 +37,56 @@ cd "$PROJECT_ROOT"
 
 # 檢查參數
 CACHE_ONLY=false
-BLUE_GREEN=false
+STANDARD_DEPLOY=false
 STATUS_ONLY=false
+ROLLBACK=false
 
 for arg in "$@"; do
     case $arg in
         --cache-only)
             CACHE_ONLY=true
             ;;
-        --blue-green)
-            BLUE_GREEN=true
+        --standard)
+            STANDARD_DEPLOY=true
             ;;
         --status)
             STATUS_ONLY=true
             ;;
+        --rollback)
+            ROLLBACK=true
+            ;;
+        --blue-green)
+            # 保留向後相容，但現在是預設行為
+            ;;
     esac
 done
 
-# 如果是藍綠部署，委託給專用腳本
-if [ "$BLUE_GREEN" = true ]; then
-    exec "$SCRIPT_DIR/blue-green-deploy.sh" deploy
-fi
-
+# 查看狀態
 if [ "$STATUS_ONLY" = true ]; then
     exec "$SCRIPT_DIR/blue-green-deploy.sh" status
+fi
+
+# 回滾
+if [ "$ROLLBACK" = true ]; then
+    exec "$SCRIPT_DIR/blue-green-deploy.sh" rollback
+fi
+
+# 預設使用藍綠部署（除非指定 --standard 或 --cache-only）
+if [ "$STANDARD_DEPLOY" = false ] && [ "$CACHE_ONLY" = false ]; then
+    echo "=============================================="
+    echo -e "${BLUE}CRM RBAC 藍綠部署（零停機）${NC}"
+    echo "=============================================="
+    echo ""
+    echo -e "${YELLOW}提示：使用 --standard 可執行標準部署（有停機）${NC}"
+    echo ""
+    exec "$SCRIPT_DIR/blue-green-deploy.sh" deploy
 fi
 
 echo "=============================================="
 if [ "$CACHE_ONLY" = true ]; then
     echo -e "${BLUE}CRM RBAC 快取更新${NC}"
 else
-    echo -e "${BLUE}CRM RBAC 生產環境完整部署${NC}"
+    echo -e "${BLUE}CRM RBAC 標準部署（有停機）${NC}"
 fi
 echo "=============================================="
 echo ""
@@ -271,11 +291,13 @@ echo "  查看狀態:     docker compose ps"
 echo "  停止服務:     docker compose down"
 echo "  重新啟動:     docker compose restart"
 echo "  快取更新:     ./production.sh --cache-only"
-echo "  藍綠部署:     ./production.sh --blue-green"
+echo "  藍綠部署:     ./production.sh (預設)"
+echo "  標準部署:     ./production.sh --standard"
 echo "  部署狀態:     ./production.sh --status"
+echo "  回滾:         ./production.sh --rollback"
 echo ""
 echo -e "${YELLOW}提示：${NC}"
-echo "  - 完整部署會重新構建所有映像"
+echo "  - 預設使用藍綠部署（零停機）"
+echo "  - 使用 --standard 執行標準部署（有停機）"
 echo "  - 使用 --cache-only 僅清除快取並重啟服務"
-echo "  - 使用 --blue-green 進行零停機藍綠部署"
 echo ""
