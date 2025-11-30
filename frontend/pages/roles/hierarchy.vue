@@ -1,19 +1,16 @@
 <template>
-  <div class="role-hierarchy-page">
-    <!-- Page Header -->
-    <div class="mb-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <NuxtLink to="/roles" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-2">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            返回角色列表
-          </NuxtLink>
-          <h1 class="text-2xl font-bold text-gray-900">角色階層管理</h1>
-          <p class="mt-1 text-sm text-gray-500">管理角色的父子關係和權限繼承</p>
-        </div>
-
+  <LayoutContentArea title="角色階層管理" subtitle="管理角色的父子關係和權限繼承">
+    <template #actions>
+      <div class="flex items-center space-x-3">
+        <NuxtLink
+          to="/roles"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+          </svg>
+          返回列表
+        </NuxtLink>
         <button
           type="button"
           @click="loadHierarchy"
@@ -26,7 +23,7 @@
           重新載入
         </button>
       </div>
-    </div>
+    </template>
 
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-12">
@@ -108,7 +105,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </LayoutContentArea>
 </template>
 
 <script setup lang="ts">
@@ -228,7 +225,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.role-hierarchy-page {
-  @apply max-w-6xl mx-auto py-6;
-}
+/* Removed custom width constraint to match other pages */
 </style>

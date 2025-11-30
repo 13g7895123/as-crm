@@ -283,6 +283,62 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /roles/hierarchy:
+    get:
+      tags:
+        - roles
+      summary: 取得角色階層樹
+      description: 取得所有角色的樹狀階層結構
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功取得角色階層
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleNode'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /roles/{id}/hierarchy:
+    get:
+      tags:
+        - roles
+      summary: 取得特定角色的階層資訊
+      description: 取得角色的父角色、祖先、子角色和後代資訊
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功取得角色階層資訊
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RoleHierarchyInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /role-assignments:
     post:
       tags:
@@ -498,6 +554,54 @@ components:
           example:
             values: ["華東", "華南"]
           description: JSON 格式的條件值
+
+    RoleNode:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "sales_manager"
+        display_name:
+          type: string
+          example: "業務主管"
+        description:
+          type: string
+          nullable: true
+        parent_id:
+          type: integer
+          nullable: true
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleNode'
+
+    RoleHierarchyInfo:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/Role'
+        parent_id:
+          type: integer
+          nullable: true
+        ancestors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        children:
+          type: array
+          items:
+            type: integer
+            description: 直屬子角色 ID 列表
+        descendants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        depth:
+          type: integer
+          example: 2
 
     RoleAssignment:
       type: object
