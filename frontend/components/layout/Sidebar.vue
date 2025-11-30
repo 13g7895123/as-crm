@@ -39,7 +39,7 @@
 
     <!-- Navigation Menu -->
     <nav class="flex-1 overflow-y-auto py-4" role="navigation" aria-label="主選單">
-      <ul class="space-y-1 px-2">
+      <ul class="space-y-2 px-2">
         <li v-for="item in visibleMenuItems" :key="item.id">
           <NuxtLink
             :to="item.path"
