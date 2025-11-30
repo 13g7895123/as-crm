@@ -6,15 +6,16 @@
 # 生產環境部署腳本
 #
 # 功能:
-#   - 檢查並停止現有容器
-#   - 完整更新 (重新構建映像)
+#   - 標準部署（單一環境）
+#   - 藍綠部署（零停機）
 #   - 清除快取
 #   - 執行資料庫遷移
-#   - 啟動所有服務
 #
 # 使用方式:
-#   ./production.sh                 # 完整部署
-#   ./production.sh --cache-only    # 僅清除快取並重啟
+#   ./production.sh                    # 標準完整部署
+#   ./production.sh --cache-only       # 僅清除快取並重啟
+#   ./production.sh --blue-green       # 藍綠部署（零停機）
+#   ./production.sh --status           # 查看部署狀態
 #
 # ============================================================================
 
@@ -27,10 +28,38 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# 取得腳本所在目錄
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+cd "$PROJECT_ROOT"
+
 # 檢查參數
 CACHE_ONLY=false
-if [ "$1" == "--cache-only" ]; then
-    CACHE_ONLY=true
+BLUE_GREEN=false
+STATUS_ONLY=false
+
+for arg in "$@"; do
+    case $arg in
+        --cache-only)
+            CACHE_ONLY=true
+            ;;
+        --blue-green)
+            BLUE_GREEN=true
+            ;;
+        --status)
+            STATUS_ONLY=true
+            ;;
+    esac
+done
+
+# 如果是藍綠部署，委託給專用腳本
+if [ "$BLUE_GREEN" = true ]; then
+    exec "$SCRIPT_DIR/blue-green-deploy.sh" deploy
+fi
+
+if [ "$STATUS_ONLY" = true ]; then
+    exec "$SCRIPT_DIR/blue-green-deploy.sh" status
 fi
 
 echo "=============================================="
@@ -237,13 +266,16 @@ echo "  - 資料庫: localhost:${DB_PORT:-9130}"
 echo "  - phpMyAdmin: http://localhost:${PHPMYADMIN_PORT:-9730}"
 echo ""
 echo "常用指令："
-echo "  查看日誌:   docker compose logs -f"
-echo "  查看狀態:   docker compose ps"
-echo "  停止服務:   docker compose down"
-echo "  重新啟動:   docker compose restart"
-echo "  快取更新:   ./production.sh --cache-only"
+echo "  查看日誌:     docker compose logs -f"
+echo "  查看狀態:     docker compose ps"
+echo "  停止服務:     docker compose down"
+echo "  重新啟動:     docker compose restart"
+echo "  快取更新:     ./production.sh --cache-only"
+echo "  藍綠部署:     ./production.sh --blue-green"
+echo "  部署狀態:     ./production.sh --status"
 echo ""
 echo -e "${YELLOW}提示：${NC}"
 echo "  - 完整部署會重新構建所有映像"
 echo "  - 使用 --cache-only 僅清除快取並重啟服務"
+echo "  - 使用 --blue-green 進行零停機藍綠部署"
 echo ""

@@ -1,6 +1,15 @@
 # 部署指南 (Deployment Guide)
 
-本專案提供兩個主要的部署腳本，分別用於開發環境和生產環境。
+本專案提供兩個主要的部署腳本，分別用於開發環境和生產環境，並支援藍綠部署實現零停機更新。
+
+## 📦 環境配置檔案
+
+| 檔案 | 用途 | 提交到 Git |
+|------|------|-----------|
+| `.env.example` | 配置範本 | ✅ |
+| `.env.dev` | 開發環境配置 | ✅ |
+| `.env.prod` | 生產環境配置 | ❌ |
+| `.env` | 當前使用的配置（symlink） | ❌ |
 
 ## 📦 腳本說明
 
@@ -32,6 +41,7 @@ npm run dev
 - 前端: http://localhost:3001 (npm run dev)
 
 **特點：**
+- ✅ 自動使用 `.env.dev` 配置
 - ✅ 自動檢查並停止現有容器
 - ✅ 執行資料庫 migrations 和 seeders
 - ✅ 支援熱重載（backend + frontend HMR）
@@ -41,57 +51,156 @@ npm run dev
 
 ### 2. `production.sh` - 生產環境
 
-**用途：** 生產環境部署，完整構建所有服務
-
-**啟動的服務：**
-- ✅ MariaDB 資料庫
-- ✅ Backend API (PHP)
-- ✅ Frontend (Nuxt SSR)
-- ✅ phpMyAdmin
+**用途：** 生產環境部署，支援標準部署和藍綠部署
 
 **使用方式：**
 
-#### 完整部署（重新構建所有映像）
+#### 標準完整部署
 ```bash
 ./production.sh
 ```
 
-#### 僅更新快取（不重新構建）
+#### 僅更新快取
 ```bash
 ./production.sh --cache-only
 ```
 
+#### 藍綠部署（零停機）
+```bash
+./production.sh --blue-green
+```
+
+#### 查看部署狀態
+```bash
+./production.sh --status
+```
+
 **功能說明：**
 
-**完整部署 (`./production.sh`)：**
-1. 停止現有容器
-2. 清除所有快取
-   - Backend writable/cache
-   - Frontend .nuxt 和 .output
-   - Docker 建置快取
-3. 重新構建 Docker 映像（--no-cache）
-4. 啟動所有服務
-5. 執行資料庫 migrations 和 seeders
+| 模式 | 說明 | 停機時間 |
+|------|------|---------|
+| 標準部署 | 重建所有映像並重啟 | 有停機 |
+| 快取更新 | 清除快取並重啟 | 短暫停機 |
+| 藍綠部署 | 部署到備用環境後切換 | **零停機** |
 
-**僅快取更新 (`./production.sh --cache-only`)：**
-1. 停止現有容器
-2. 清除應用快取
-   - Backend writable/cache
-   - Frontend .nuxt 和 .output
-3. 重啟服務（不重新構建）
+---
 
-**服務資訊：**
-- Frontend: http://localhost:9330
-- Backend API: http://localhost:9230
-- 資料庫: localhost:9130
-- phpMyAdmin: http://localhost:9730
+## 🔵🟢 藍綠部署
 
-**特點：**
-- ✅ 自動檢查並停止現有容器
-- ✅ 完整的快取清理機制
-- ✅ 支援兩種更新模式（完整/快取）
-- ✅ 執行資料庫遷移
-- ✅ 適合生產環境部署
+藍綠部署允許在不停機的情況下更新系統，透過維護兩個獨立環境實現。
+
+### 概念
+
+```
+                    ┌─────────────┐
+                    │   Nginx     │
+                    │  (流量入口)  │
+                    └──────┬──────┘
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+     ┌────────────────┐       ┌────────────────┐
+     │  藍色環境 🔵   │       │  綠色環境 🟢   │
+     │  (當前活躍)    │       │  (備用/新版)   │
+     │                │       │                │
+     │ backend-blue   │       │ backend-green  │
+     │ frontend-blue  │       │ frontend-green │
+     └────────────────┘       └────────────────┘
+              │                         │
+              └────────────┬────────────┘
+                           ▼
+                    ┌─────────────┐
+                    │  Database   │
+                    │   (共用)    │
+                    └─────────────┘
+```
+
+### 部署流程
+
+1. **部署新版本**到非活躍環境
+2. **健康檢查**確認新版本正常
+3. **執行遷移**（如需要）
+4. **切換流量**到新環境
+5. **保留舊環境**用於快速回滾
+
+### 使用方式
+
+```bash
+# 部署到非活躍環境並切換
+./scripts/deploy/blue-green-deploy.sh deploy
+
+# 查看當前狀態
+./scripts/deploy/blue-green-deploy.sh status
+
+# 手動切換環境（不重新部署）
+./scripts/deploy/blue-green-deploy.sh switch
+
+# 回滾到上一個環境
+./scripts/deploy/blue-green-deploy.sh rollback
+
+# 健康檢查
+./scripts/deploy/blue-green-deploy.sh health
+
+# 清理非活躍環境
+./scripts/deploy/blue-green-deploy.sh cleanup
+```
+
+### Docker Compose 配置
+
+藍綠部署使用 `docker-compose.blue-green.yml`：
+
+```bash
+# 僅啟動藍色環境
+docker compose -f docker-compose.blue-green.yml --profile blue up -d
+
+# 僅啟動綠色環境
+docker compose -f docker-compose.blue-green.yml --profile green up -d
+
+# 啟動所有環境
+docker compose -f docker-compose.blue-green.yml --profile all up -d
+```
+
+---
+
+## 🔒 生產環境設定
+
+### 1. 建立 `.env.prod`
+
+```bash
+cp .env.example .env.prod
+```
+
+### 2. 修改安全配置
+
+```bash
+# ⚠️ 必須修改以下設定！
+
+# 資料庫密碼
+DB_PASSWORD=your_strong_password_here
+DB_ROOT_PASSWORD=your_root_password_here
+
+# JWT 金鑰（使用以下指令生成）
+# openssl rand -base64 32
+JWT_SECRET_KEY=your_random_jwt_key_here
+
+# API URL
+API_BASE_URL=https://your-domain.com/api/v1
+
+# CORS
+CORS_ALLOWED_ORIGINS=https://your-domain.com
+```
+
+### 3. SSL 憑證
+
+```bash
+# 生成自簽憑證（僅測試用）
+./scripts/deploy/generate-ssl-cert.sh your-domain.com
+
+# 生產環境請使用正式憑證
+# 將憑證放置於：
+# - docker/nginx/ssl/cert.pem
+# - docker/nginx/ssl/key.pem
+```
 
 ---
 
@@ -134,6 +243,12 @@ docker compose exec backend php run-seeders.php
 # 快速更新（只更新程式碼和快取）
 ./production.sh --cache-only
 
+# 藍綠部署（零停機）
+./production.sh --blue-green
+
+# 查看部署狀態
+./production.sh --status
+
 # 查看所有服務日誌
 docker compose logs -f
 
@@ -159,56 +274,97 @@ docker compose down -v
 ## 🗂️ 目錄結構
 
 ```
-as.crm/
-├── production.sh        # 生產環境部署腳本
-├── develop.sh          # 開發環境啟動腳本
-├── docker-compose.yml  # Docker Compose 配置
-├── .env               # 環境變數配置
+crm/
+├── develop.sh              # 開發環境腳本 (symlink)
+├── production.sh           # 生產環境腳本 (symlink)
+├── docker-compose.yml      # 標準 Docker Compose
+├── docker-compose.prod.yml # 生產環境配置
+├── docker-compose.blue-green.yml  # 藍綠部署配置
+├── .env.dev                # 開發環境變數
+├── .env.prod               # 生產環境變數 (不提交)
+│
+├── scripts/
+│   ├── dev/
+│   │   └── develop.sh
+│   ├── deploy/
+│   │   ├── production.sh
+│   │   ├── blue-green-deploy.sh
+│   │   ├── generate-ssl-cert.sh
+│   │   └── run-migrations.sh
+│   ├── db/
+│   │   └── backup-database.sh
+│   └── test/
+│       └── health-check.sh
+│
+├── docker/
+│   ├── nginx/
+│   │   ├── nginx.conf
+│   │   ├── conf.d/
+│   │   │   └── blue-green.conf
+│   │   └── ssl/
+│   │       ├── cert.pem
+│   │       └── key.pem
+│   └── ...
+│
 ├── backend/
-│   ├── writable/      # 可寫目錄（日誌、快取等）
-│   └── ...
-├── frontend/
-│   ├── .nuxt/        # Nuxt 開發快取
-│   ├── .output/      # Nuxt 建置輸出
-│   └── ...
-└── scripts/          # 輔助腳本
-    ├── run-migrations.sh
-    ├── backup-database.sh
-    ├── health-check.sh
-    └── ...
+│   └── writable/           # 可寫目錄
+│
+└── frontend/
+    ├── .nuxt/              # 開發快取
+    └── .output/            # 建置輸出
 ```
 
 ---
 
 ## 🔧 環境變數
 
-主要環境變數在 `.env` 檔案中設定：
+### 開發環境 (`.env.dev`)
 
 ```bash
-# 資料庫配置
-DB_HOST=database
+# Port 配置（9xxx 系列）
 DB_PORT=9130
-DB_NAME=crm_db
-DB_USER=crm_user
-DB_PASSWORD=crm_password
-DB_ROOT_PASSWORD=root_password
-
-# 服務 Port
 BACKEND_PORT=9230
 FRONTEND_PORT=9330
 PHPMYADMIN_PORT=9730
 
-# JWT 配置
-JWT_SECRET_KEY=your_secret_key_here
-JWT_TIME_TO_LIVE=3600
-JWT_REFRESH_TIME_TO_LIVE=604800
+# 資料庫
+DB_HOST=database
+DB_NAME=crm_db
+DB_USER=crm_user
+DB_PASSWORD=crm_password
+
+# 後端
+CI_ENVIRONMENT=development
+JWT_SECRET_KEY=dev-secret-key-change-in-production
+
+# 前端
+NUXT_PUBLIC_API_BASE_URL=http://localhost:9230/api/v1
+```
+
+### 生產環境 (`.env.prod`)
+
+```bash
+# 部署配置
+DEPLOY_COLOR=blue
+
+# Port 配置（標準 port）
+NGINX_HTTP_PORT=80
+NGINX_HTTPS_PORT=443
+DB_PORT=3306
+
+# 資料庫（⚠️ 修改密碼！）
+DB_PASSWORD=CHANGE_ME_STRONG_PASSWORD
+DB_ROOT_PASSWORD=CHANGE_ME_ROOT_PASSWORD
+
+# 後端
+CI_ENVIRONMENT=production
+JWT_SECRET_KEY=CHANGE_ME_USE_OPENSSL_RAND_BASE64_32
+
+# 前端
+API_BASE_URL=https://your-domain.com/api/v1
 
 # CORS
-CORS_ALLOWED_ORIGINS=http://localhost:9330
-
-# Nuxt
-NUXT_PUBLIC_API_BASE_URL=http://localhost:9230/api/v1
-NUXT_PUBLIC_APP_NAME=CRM 權限管理系統
+CORS_ALLOWED_ORIGINS=https://your-domain.com
 ```
 
 ---
@@ -239,35 +395,28 @@ docker compose logs database
 docker compose restart database
 ```
 
-### 問題：快取未清除
+### 問題：藍綠部署切換失敗
 
 ```bash
-# 手動清除所有快取
-rm -rf backend/writable/cache/*
-rm -rf frontend/.nuxt
-rm -rf frontend/.output
+# 檢查目標環境是否健康
+./scripts/deploy/blue-green-deploy.sh health
 
-# 使用生產腳本快取模式
-./production.sh --cache-only
+# 查看 nginx 配置
+cat docker/nginx/conf.d/blue-green.conf | grep active_color
+
+# 手動回滾
+./scripts/deploy/blue-green-deploy.sh rollback
 ```
 
-### 問題：權限錯誤
+### 問題：SSL 憑證錯誤
 
 ```bash
-# 設定 backend writable 目錄權限
-chmod -R 777 backend/writable
+# 重新生成自簽憑證
+./scripts/deploy/generate-ssl-cert.sh
 
-# 重新執行腳本
-./develop.sh  # 或 ./production.sh
+# 檢查憑證
+openssl x509 -in docker/nginx/ssl/cert.pem -text -noout
 ```
-
----
-
-## 📚 相關文檔
-
-- [README.md](README.md) - 專案總覽
-- [CLAUDE.md](CLAUDE.md) - 開發指南
-- [docs/](docs/) - 詳細文檔
 
 ---
 
@@ -279,11 +428,17 @@ chmod -R 777 backend/writable
 - 適合快速開發和測試
 
 ### 生產環境
-- 使用 `--no-cache` 構建確保最新版本
-- 建議定期執行完整部署
-- 快取模式僅用於小更新
-- 記得定期備份資料庫
+- **務必修改** `.env.prod` 中的密碼和金鑰
+- 使用正式 SSL 憑證
+- 建議使用藍綠部署實現零停機
+- 定期備份資料庫
+- 保留舊環境用於快速回滾
+
+### 藍綠部署
+- 資料庫是共用的，需注意遷移相容性
+- 部署前確認新舊版本 API 相容
+- 回滾不會回滾資料庫變更
 
 ---
 
-**最後更新：** 2025-10-31
+**最後更新：** 2025-11-30
