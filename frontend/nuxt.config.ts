@@ -4,6 +4,9 @@
 // CRM RBAC 權限管理系統前端配置
 
 export default defineNuxtConfig({
+  // SSR 配置 - 關閉以使用純客戶端渲染模式
+  ssr: false,
+
   // 開發工具
   devtools: { enabled: true },
 
@@ -27,7 +30,12 @@ export default defineNuxtConfig({
 
     // 公開配置（客戶端和伺服器端都可用）
     public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v1',
+      // API Base URL
+      // 開發環境：使用相對路徑，透過 nitro.config.ts 的 devProxy 代理到後端
+      // 生產環境：使用完整 URL，需要後端配置 CORS
+      apiBaseUrl: process.env.NODE_ENV === 'production'
+        ? (process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:9230/api/v1')
+        : '/api/v1',
       appName: process.env.NUXT_PUBLIC_APP_NAME || 'CRM 權限管理系統',
       appVersion: process.env.NUXT_PUBLIC_APP_VERSION || '1.0.0',
       // JWT 相關配置
@@ -49,6 +57,28 @@ export default defineNuxtConfig({
   // Vite 配置
   vite: {
     server: {
+      // API Proxy 配置 - 用於開發環境避免 CORS 問題
+      proxy: {
+        '/api': {
+          target: 'http://localhost:9230',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path,
+          configure: (proxy, options) => {
+            proxy.on('error', (err, req, res) => {
+              console.log('❌ Proxy error:', err);
+            });
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              const target = options.target || 'unknown';
+              const url = req.url || '';
+              console.log('🔄 Proxying:', req.method, url, '→', target + url);
+            });
+            proxy.on('proxyRes', (proxyRes, req, res) => {
+              console.log('✅ Proxy response:', proxyRes.statusCode, req.url || '');
+            });
+          },
+        }
+      },
       hmr: {
         protocol: 'ws',
         host: '0.0.0.0',

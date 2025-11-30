@@ -94,10 +94,26 @@ class AuthFilter implements FilterInterface
     {
         $response = Services::response();
 
-        return $response->setJSON([
+        // 設置 JSON 回應和狀態碼
+        $response->setJSON([
             'status'  => 'error',
             'message' => $message,
             'code'    => 401,
         ])->setStatusCode(401);
+
+        // 添加 CORS headers，避免前端 CORS 錯誤
+        // 因為 AuthFilter 是 before filter，如果返回 response 會跳過 after filters (包括 CorsFilter)
+        $corsConfig = config('Cors');
+        $request = Services::request();
+        $origin = $request->getHeaderLine('Origin');
+
+        if ($origin && $corsConfig->isOriginAllowed($origin)) {
+            $corsHeaders = $corsConfig->getHeaders($origin);
+            foreach ($corsHeaders as $key => $value) {
+                $response->setHeader($key, $value);
+            }
+        }
+
+        return $response;
     }
 }

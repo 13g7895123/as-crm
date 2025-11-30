@@ -17,6 +17,7 @@ export interface Role {
   updated_at?: string
   deleted_at?: string
   parent_role_id?: number
+  parent_role_name?: string
   permissions?: Permission[]
   condition_rules?: ConditionRule[]
 }

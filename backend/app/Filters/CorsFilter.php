@@ -40,6 +40,14 @@ class CorsFilter implements FilterInterface
         if (strtoupper($request->getMethod()) === 'OPTIONS') {
             $response = Services::response();
 
+            // 先移除可能已存在的 CORS headers，避免重複
+            $response->removeHeader('Access-Control-Allow-Origin');
+            $response->removeHeader('Access-Control-Allow-Methods');
+            $response->removeHeader('Access-Control-Allow-Headers');
+            $response->removeHeader('Access-Control-Expose-Headers');
+            $response->removeHeader('Access-Control-Allow-Credentials');
+            $response->removeHeader('Access-Control-Max-Age');
+
             // 設定 CORS headers
             foreach ($corsConfig->getHeaders($origin) as $header => $value) {
                 $response->setHeader($header, $value);
@@ -74,6 +82,14 @@ class CorsFilter implements FilterInterface
 
         // 取得請求的來源
         $origin = $request->getHeaderLine('Origin');
+
+        // 先移除可能已存在的 CORS headers，避免重複
+        $response->removeHeader('Access-Control-Allow-Origin');
+        $response->removeHeader('Access-Control-Allow-Methods');
+        $response->removeHeader('Access-Control-Allow-Headers');
+        $response->removeHeader('Access-Control-Expose-Headers');
+        $response->removeHeader('Access-Control-Allow-Credentials');
+        $response->removeHeader('Access-Control-Max-Age');
 
         // 設定 CORS headers 到回應
         foreach ($corsConfig->getHeaders($origin) as $header => $value) {

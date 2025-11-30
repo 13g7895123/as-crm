@@ -1,15 +1,13 @@
 <template>
-  <div class="edit-role-page">
-    <!-- Page header -->
+  <LayoutContentArea title="編輯角色" subtitle="修改角色資訊和權限設定">
+    <!-- 返回連結 -->
     <div class="mb-6">
-      <NuxtLink to="/roles" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
+      <NuxtLink to="/roles" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
         返回角色列表
       </NuxtLink>
-      <h1 class="text-2xl font-bold text-gray-900">編輯角色</h1>
-      <p class="mt-1 text-sm text-gray-500">修改角色資訊和權限設定</p>
     </div>
 
     <!-- Loading state -->
@@ -98,7 +96,7 @@
     <!-- Success notification -->
     <div
       v-if="showSuccess"
-      class="fixed bottom-4 right-4 bg-green-50 border border-green-200 rounded-lg px-4 py-3 shadow-lg"
+      class="fixed bottom-4 right-4 bg-green-50 border border-green-200 rounded-lg px-4 py-3 shadow-lg z-50"
     >
       <div class="flex items-center">
         <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -107,7 +105,7 @@
         <p class="text-sm font-medium text-green-800">角色更新成功！</p>
       </div>
     </div>
-  </div>
+  </LayoutContentArea>
 </template>
 
 <script setup lang="ts">
@@ -237,8 +235,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.edit-role-page {
-  @apply max-w-6xl mx-auto py-6;
-}
-</style>

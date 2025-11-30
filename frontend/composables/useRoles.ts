@@ -63,17 +63,31 @@ export function useRoles() {
       if (filters.order) queryParams.append('order', filters.order)
 
       const url = `${getApiUrl()}/roles?${queryParams.toString()}`
+      const headers = getHeaders()
+      
+      // 添加詳細日誌
+      console.log('🔍 [useRoles] Fetching roles from:', url)
+      console.log('📋 [useRoles] Query params:', Object.fromEntries(queryParams))
+      console.log('🔑 [useRoles] Headers:', headers)
+      console.log('👤 [useRoles] Is authenticated:', authStore.isAuthenticated)
+      console.log('🎫 [useRoles] Has token:', !!authStore.accessToken)
+      
       const response = await fetch(url, {
         method: 'GET',
-        headers: getHeaders(),
+        headers,
       })
+      
+      console.log('📡 [useRoles] Response status:', response.status)
+      console.log('📦 [useRoles] Response headers:', Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.error('❌ [useRoles] Error response:', errorData)
         throw new Error(errorData.message || 'Failed to fetch roles')
       }
 
       const data = await response.json()
+      console.log('✅ [useRoles] Success! Data received:', data)
 
       rolesStore.setRoles(data.data || [])
       if (data.meta) {

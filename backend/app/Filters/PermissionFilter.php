@@ -31,12 +31,7 @@ class PermissionFilter implements FilterInterface
         $userId = $this->getCurrentUserId($request);
 
         if (!$userId) {
-            return service('response')
-                ->setJSON([
-                    'error' => '未授權',
-                    'message' => '請先登入',
-                ])
-                ->setStatusCode(401);
+            return $this->errorResponse($request, 401, '未授權', '請先登入');
         }
 
         // Get required permissions from arguments
@@ -57,26 +52,14 @@ class PermissionFilter implements FilterInterface
                 $hasPermission = $permissionService->userHasPermission($userId, $permission, $context);
 
                 if (!$hasPermission) {
-                    return service('response')
-                        ->setJSON([
-                            'error' => '權限不足',
-                            'message' => '您沒有權限執行此操作',
-                            'required_permission' => $permission,
-                        ])
-                        ->setStatusCode(403);
+                    return $this->errorResponse($request, 403, '權限不足', '您沒有權限執行此操作', ['required_permission' => $permission]);
                 }
             }
 
             return $request;
         } catch (\Exception $e) {
             log_message('error', 'Permission check failed: ' . $e->getMessage());
-
-            return service('response')
-                ->setJSON([
-                    'error' => '權限檢查失敗',
-                    'message' => $e->getMessage(),
-                ])
-                ->setStatusCode(500);
+            return $this->errorResponse($request, 500, '權限檢查失敗', $e->getMessage());
         }
     }
 
@@ -166,5 +149,41 @@ class PermissionFilter implements FilterInterface
         }
 
         return $context;
+    }
+
+    /**
+     * Create error response with CORS headers
+     *
+     * @param RequestInterface $request
+     * @param int $statusCode
+     * @param string $error
+     * @param string $message
+     * @param array $additionalData
+     * @return ResponseInterface
+     */
+    protected function errorResponse(RequestInterface $request, int $statusCode, string $error, string $message, array $additionalData = []): ResponseInterface
+    {
+        $response = service('response');
+
+        $data = array_merge([
+            'error' => $error,
+            'message' => $message,
+        ], $additionalData);
+
+        $response->setJSON($data)->setStatusCode($statusCode);
+
+        // 添加 CORS headers，避免前端 CORS 錯誤
+        // 因為 PermissionFilter 是 before filter，如果返回 response 會跳過 after filters (包括 CorsFilter)
+        $corsConfig = config('Cors');
+        $origin = $request->getHeaderLine('Origin');
+
+        if ($origin && $corsConfig->isOriginAllowed($origin)) {
+            $corsHeaders = $corsConfig->getHeaders($origin);
+            foreach ($corsHeaders as $key => $value) {
+                $response->setHeader($key, $value);
+            }
+        }
+
+        return $response;
     }
 }

@@ -125,9 +125,9 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\API'], function ($rout
      * 需要 AuthFilter 驗證身份
      */
     $routes->group('users', ['filter' => 'auth'], function ($routes) {
-        $routes->get('(:num)/permissions', 'UserPermissionController::permissions/$1', ['as' => 'api.users.permissions']);
-        $routes->get('(:num)/roles', 'RoleAssignmentController::userRoles/$1', ['as' => 'api.users.roles']);
-        $routes->post('(:num)/check-permission', 'UserPermissionController::checkPermission/$1', ['as' => 'api.users.checkPermission']);
+        $routes->get('(:num)/permissions', 'API\UserPermissionController::permissions/$1', ['as' => 'api.users.permissions']);
+        $routes->get('(:num)/roles', 'API\RoleAssignmentController::userRoles/$1', ['as' => 'api.users.roles']);
+        $routes->post('(:num)/check-permission', 'API\UserPermissionController::checkPermission/$1', ['as' => 'api.users.checkPermission']);
     });
 
     /**

@@ -114,6 +114,7 @@ fi
 chmod -R 777 backend/writable 2>/dev/null || {
     echo -e "${YELLOW}  ⚠ 部分權限設定失敗（將由容器處理）${NC}"
 }
+chmod 755 backend/app/Config/Boot 2>/dev/null || true
 echo -e "${GREEN}  ✓ 權限設定完成${NC}"
 
 echo ""

@@ -12,6 +12,7 @@ export interface PermissionGroup {
 export interface Permission {
   id: number
   name: string
+  display_name: string
   resource: string
   action: 'view' | 'edit' | 'export' | 'assign'
   description?: string
