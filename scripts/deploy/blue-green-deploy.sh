@@ -335,8 +335,17 @@ cmd_help() {
 # 主程序
 # ============================================================================
 
+# 取得腳本所在目錄（處理 symlink）
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
 # 切換到專案目錄
-cd "$(dirname "$0")/.."
+cd "$SCRIPT_DIR/../.."
 
 case "${1:-help}" in
     deploy)
