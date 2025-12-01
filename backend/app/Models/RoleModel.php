@@ -15,18 +15,19 @@ class RoleModel extends Model
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
-    protected $useSoftDeletes   = true;
+    protected $useSoftDeletes   = false;
     protected $protectFields    = true;
 
     protected $allowedFields = [
         'name',
         'display_name',
         'description',
-        'level',
+        'is_active',
         'is_system',
+        'parent_role_id',
+        'created_by',
         'created_at',
         'updated_at',
-        'deleted_at'
     ];
 
     // Dates
@@ -34,14 +35,13 @@ class RoleModel extends Model
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
-    protected $deletedField  = 'deleted_at';
 
     // Validation
     protected $validationRules = [
         'name'         => 'required|min_length[3]|max_length[100]|regex_match[/^[a-z0-9_]+$/]|is_unique[roles.name,id,{id}]',
         'display_name' => 'required|min_length[2]|max_length[255]',
         'description'  => 'permit_empty|max_length[1000]',
-        'level'        => 'permit_empty|integer',
+        'is_active'    => 'permit_empty|in_list[0,1]',
         'is_system'    => 'permit_empty|in_list[0,1]',
     ];
 
@@ -144,12 +144,7 @@ class RoleModel extends Model
 
         // Apply filters
         if (isset($filters['is_active'])) {
-            // Note: We don't have is_active in migration, using deleted_at instead
-            if ($filters['is_active']) {
-                $builder->where('deleted_at IS NULL');
-            } else {
-                $builder->where('deleted_at IS NOT NULL');
-            }
+            $builder->where('is_active', $filters['is_active'] ? 1 : 0);
         }
 
         if (isset($filters['is_system'])) {

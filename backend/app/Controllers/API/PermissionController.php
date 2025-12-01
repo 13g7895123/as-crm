@@ -125,7 +125,8 @@ class PermissionController extends BaseController
             }
 
             // Get user ID from JWT token (assumes auth middleware sets it)
-            $userId = $this->request->user_id ?? null;
+            $auth = $this->request->fetchGlobal('auth');
+            $userId = $auth['user_id'] ?? null;
 
             if (!$userId) {
                 return $this->failUnauthorized('請先登入系統');
@@ -156,7 +157,8 @@ class PermissionController extends BaseController
         try {
             // Check if current user has permission to view other users' permissions
             // (In real implementation, this would use permission checking)
-            $currentUserId = $this->request->user_id ?? null;
+            $auth = $this->request->fetchGlobal('auth');
+            $currentUserId = $auth['user_id'] ?? null;
 
             if (!$currentUserId) {
                 return $this->failUnauthorized('請先登入系統');
@@ -191,7 +193,8 @@ class PermissionController extends BaseController
     public function myPermissions(): ResponseInterface
     {
         try {
-            $userId = $this->request->user_id ?? null;
+            $auth = $this->request->fetchGlobal('auth');
+            $userId = $auth['user_id'] ?? null;
 
             if (!$userId) {
                 return $this->failUnauthorized('請先登入系統');

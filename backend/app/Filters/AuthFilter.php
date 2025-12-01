@@ -55,13 +55,18 @@ class AuthFilter implements FilterInterface
                 return $this->unauthorizedResponse('Token 已過期');
             }
 
-            // 將使用者資訊存入 request,供後續 controller 使用
-            $request->user_id = $payload->user_id ?? null;
-            $request->username = $payload->username ?? null;
-            $request->email = $payload->email ?? null;
+            // 將使用者資訊存入共享服務,供後續 controller 使用
+            // 使用 config 類別作為簡單的資料容器，避免 PHP 8.2+ 動態屬性問題
+            $authData = new \stdClass();
+            $authData->user_id = $payload->user_id ?? null;
+            $authData->username = $payload->username ?? null;
+            $authData->email = $payload->email ?? null;
+            
+            // 將認證資料存入全域變數（CI4 推薦方式之一）
+            Services::request()->setGlobal('auth', (array) $authData);
 
             // 驗證通過,繼續處理請求
-            return $request;
+            return;
 
         } catch (\Exception $e) {
             log_message('error', 'JWT 驗證失敗: ' . $e->getMessage());

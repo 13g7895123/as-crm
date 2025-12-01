@@ -26,10 +26,13 @@ export function useRoleAssignments() {
    * Get authorization headers
    */
   const getHeaders = (): HeadersInit => {
-    return {
+    const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authStore.accessToken}`,
     }
+    if (authStore.accessToken) {
+      headers['Authorization'] = `Bearer ${authStore.accessToken}`
+    }
+    return headers
   }
 
   /**

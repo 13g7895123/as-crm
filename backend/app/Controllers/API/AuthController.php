@@ -114,7 +114,8 @@ class AuthController extends ResourceController
     public function logout()
     {
         // 取得 user_id (由 AuthFilter 設定)
-        $userId = $this->request->user_id ?? null;
+        $auth = $this->request->fetchGlobal('auth');
+        $userId = $auth['user_id'] ?? null;
 
         // 記錄登出事件 (可選)
         if ($userId) {
@@ -210,7 +211,8 @@ class AuthController extends ResourceController
     public function me()
     {
         // 取得 user_id (由 AuthFilter 設定)
-        $userId = $this->request->user_id ?? null;
+        $auth = $this->request->fetchGlobal('auth');
+        $userId = $auth['user_id'] ?? null;
 
         if (!$userId) {
             return $this->failUnauthorized('未授權的請求');

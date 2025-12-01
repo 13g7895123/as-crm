@@ -39,10 +39,13 @@ export function useRoleHierarchy() {
    * Get authorization headers
    */
   const getHeaders = (): HeadersInit => {
-    return {
+    const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authStore.accessToken}`,
     }
+    if (authStore.accessToken) {
+      headers['Authorization'] = `Bearer ${authStore.accessToken}`
+    }
+    return headers
   }
 
   /**
@@ -53,6 +56,10 @@ export function useRoleHierarchy() {
     error.value = null
 
     try {
+      if (!authStore.accessToken) {
+        throw new Error('請先登入')
+      }
+
       const url = `${getApiUrl()}/roles/hierarchy`
       const response = await fetch(url, {
         method: 'GET',
