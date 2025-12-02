@@ -69,13 +69,19 @@ class CreateRoleHierarchyTable extends Migration
 
     public function down()
     {
-        // 先移除外鍵約束
+        // 先移除外鍵約束 (IF EXISTS)
         if ($this->db->DBDriver === 'MySQLi') {
-            $this->db->query('ALTER TABLE `role_hierarchy` DROP FOREIGN KEY `fk_role_hierarchy_ancestor`');
-            $this->db->query('ALTER TABLE `role_hierarchy` DROP FOREIGN KEY `fk_role_hierarchy_descendant`');
-            $this->db->query('ALTER TABLE `role_hierarchy` DROP CHECK `chk_depth_non_negative`');
+            // Check if table exists before trying to drop constraints
+            if ($this->db->tableExists('role_hierarchy')) {
+                // Use silent queries to ignore errors when FK doesn't exist
+                $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=0');
+            }
         }
 
         $this->forge->dropTable('role_hierarchy', true);
+        
+        if ($this->db->DBDriver === 'MySQLi') {
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 }

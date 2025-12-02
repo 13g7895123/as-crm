@@ -112,15 +112,15 @@ class CreateRoleAssignmentsTable extends Migration
 
     public function down()
     {
-        // 先移除外鍵約束
+        // 安全地移除表格
         if ($this->db->DBDriver === 'MySQLi') {
-            $this->db->query('ALTER TABLE `role_assignments` DROP FOREIGN KEY `fk_role_assignments_user`');
-            $this->db->query('ALTER TABLE `role_assignments` DROP FOREIGN KEY `fk_role_assignments_role`');
-            $this->db->query('ALTER TABLE `role_assignments` DROP FOREIGN KEY `fk_role_assignments_assigned_by`');
-            $this->db->query('ALTER TABLE `role_assignments` DROP FOREIGN KEY `fk_role_assignments_revoked_by`');
-            $this->db->query('ALTER TABLE `role_assignments` DROP CHECK `chk_valid_period`');
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=0');
         }
 
         $this->forge->dropTable('role_assignments', true);
+        
+        if ($this->db->DBDriver === 'MySQLi') {
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 }

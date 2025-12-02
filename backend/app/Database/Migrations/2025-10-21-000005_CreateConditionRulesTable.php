@@ -90,12 +90,15 @@ class CreateConditionRulesTable extends Migration
 
     public function down()
     {
-        // 先移除外鍵約束
+        // 安全地移除表格
         if ($this->db->DBDriver === 'MySQLi') {
-            $this->db->query('ALTER TABLE `condition_rules` DROP FOREIGN KEY `fk_condition_rules_role`');
-            $this->db->query('ALTER TABLE `condition_rules` DROP FOREIGN KEY `fk_condition_rules_permission`');
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=0');
         }
 
         $this->forge->dropTable('condition_rules', true);
+        
+        if ($this->db->DBDriver === 'MySQLi') {
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 }

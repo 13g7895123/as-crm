@@ -106,12 +106,15 @@ class CreateRolesTable extends Migration
 
     public function down()
     {
-        // 先移除外鍵約束
+        // 安全地移除外鍵約束
         if ($this->db->DBDriver === 'MySQLi') {
-            $this->db->query('ALTER TABLE `roles` DROP FOREIGN KEY `fk_roles_parent_role`');
-            $this->db->query('ALTER TABLE `roles` DROP FOREIGN KEY `fk_roles_created_by`');
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=0');
         }
 
         $this->forge->dropTable('roles', true);
+        
+        if ($this->db->DBDriver === 'MySQLi') {
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 }

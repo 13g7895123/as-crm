@@ -210,12 +210,16 @@ class CreateAuditLogsTable extends Migration
 
     public function down()
     {
-        // 先移除外鍵約束
+        // 安全地移除表格
         if ($this->db->DBDriver === 'MySQLi') {
-            $this->db->query('ALTER TABLE `audit_logs` DROP FOREIGN KEY `fk_audit_logs_user`');
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=0');
         }
 
         $this->forge->dropTable('audit_logs', true);
         $this->forge->dropTable('audit_logs_archive', true);
+        
+        if ($this->db->DBDriver === 'MySQLi') {
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 }

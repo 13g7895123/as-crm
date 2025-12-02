@@ -74,7 +74,10 @@ class CustomerController extends BaseController
                 ], 422);
             }
 
-            $data['created_by'] = auth()->user()->id ?? 1;
+            // Get user ID from auth context (set by AuthFilter)
+            $auth = $this->request->fetchGlobal('auth');
+            $data['created_by'] = $auth['user_id'] ?? 1;
+            
             $customerId = $this->customerService->createCustomer($data);
 
             $customer = $this->customerService->getCustomer($customerId);
@@ -137,7 +140,9 @@ class CustomerController extends BaseController
             // Remove fields that shouldn't be updated
             unset($data['id'], $data['created_at'], $data['created_by']);
 
-            $data['updated_by'] = auth()->user()->id ?? 1;
+            // Get user ID from auth context (set by AuthFilter)
+            $auth = $this->request->fetchGlobal('auth');
+            $data['updated_by'] = $auth['user_id'] ?? 1;
 
             $this->customerService->updateCustomer((int)$id, $data);
             $customer = $this->customerService->getCustomer((int)$id);

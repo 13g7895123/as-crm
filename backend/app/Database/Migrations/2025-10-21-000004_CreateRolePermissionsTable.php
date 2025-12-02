@@ -68,12 +68,15 @@ class CreateRolePermissionsTable extends Migration
 
     public function down()
     {
-        // 先移除外鍵約束
+        // 安全地移除表格
         if ($this->db->DBDriver === 'MySQLi') {
-            $this->db->query('ALTER TABLE `role_permissions` DROP FOREIGN KEY `fk_role_permissions_role`');
-            $this->db->query('ALTER TABLE `role_permissions` DROP FOREIGN KEY `fk_role_permissions_permission`');
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=0');
         }
 
         $this->forge->dropTable('role_permissions', true);
+        
+        if ($this->db->DBDriver === 'MySQLi') {
+            $this->db->simpleQuery('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 }

@@ -76,7 +76,10 @@ class OrderController extends BaseController
                 ], 422);
             }
 
-            $data['created_by'] = auth()->user()->id ?? 1;
+            // Get user ID from auth context (set by AuthFilter)
+            $auth = $this->request->fetchGlobal('auth');
+            $data['created_by'] = $auth['user_id'] ?? 1;
+            
             $orderId = $this->orderService->createOrder($data);
 
             $order = $this->orderService->getOrder($orderId);
@@ -139,7 +142,9 @@ class OrderController extends BaseController
             // Remove fields that shouldn't be updated
             unset($data['id'], $data['order_no'], $data['created_at'], $data['created_by']);
 
-            $data['updated_by'] = auth()->user()->id ?? 1;
+            // Get user ID from auth context (set by AuthFilter)
+            $auth = $this->request->fetchGlobal('auth');
+            $data['updated_by'] = $auth['user_id'] ?? 1;
 
             $this->orderService->updateOrder((int)$id, $data);
             $order = $this->orderService->getOrder((int)$id);
